@@ -1,3 +1,7 @@
-/Code/.ipynb_checkpoints
-/Code/FinRL/.ipynb_checkpoints
-/Code/LSTM vs. RC/.ipynb_checkpoints
+*.csv
+*.ipynb_checkpoints
+*.pyc
+*.csv
+*.mp4
+*.docx
+/Code/FinRL/results

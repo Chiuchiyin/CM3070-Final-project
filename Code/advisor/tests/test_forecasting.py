@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from advisor.evaluation import compare_esn_with_baseline
-from advisor.forecasting import EchoStateNetwork, ESNConfig
+from advisor.forecasting import EchoStateNetwork, ESNConfig, ReservoirPyESN, ReservoirPyForecaster
 
 
 class ESNTests(unittest.TestCase):
@@ -41,6 +41,10 @@ class ESNTests(unittest.TestCase):
         self.assertEqual(len(metrics), 4)
         baseline = predictions[predictions["model_name"] == "last_close"]
         np.testing.assert_allclose(baseline["predicted"], baseline["previous"])
+
+    def test_reservoirpy_forecaster_exposes_the_same_service_identity(self):
+        self.assertEqual(ReservoirPyForecaster.name, "reservoirpy_esn")
+        self.assertEqual(ReservoirPyESN.name, "reservoirpy_esn")
 
 
 if __name__ == "__main__":

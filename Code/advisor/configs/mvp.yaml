@@ -1,0 +1,28 @@
+schema_version: 1
+
+universe:
+  name: dow5_mvp_v1
+  tickers: [AAPL, MSFT, JPM, JNJ, PG]
+
+data:
+  start: 2021-01-01
+  end: 2025-06-16
+  cache_dir: ../data/cache
+  prepared_data_path: ../data/processed/mvp_market_data.csv
+  metadata_path: ../data/processed/mvp_market_data.metadata.json
+
+forecast:
+  backend: reservoirpy
+  reservoir_size: 50
+  washout: 20
+  seed: 42
+
+backtest:
+  initial_value: 10000.0
+  transaction_cost_bps: 10.0
+  slippage_bps: 5.0
+  rebalance_every: 1
+
+application:
+  default_risk_profile: moderate
+  allowed_risk_profiles: [conservative, moderate, growth]

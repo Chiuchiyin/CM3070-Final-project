@@ -206,3 +206,114 @@ class ESNForecaster:
                 "training_observations": len(closes),
             })
         return pd.DataFrame.from_records(records)
+
+
+class ReservoirPyESN:
+    """One-step ESN backed by ReservoirPy, loaded only when used.
+
+    The fitting and scaling rules intentionally match ``EchoStateNetwork`` so
+    both backends can be compared in the same walk-forward evaluator.
+    """
+
+    name = "reservoirpy_esn"
+    version = "reservoirpy_esn_v1"
+
+    def __init__(self, config: ESNConfig | None = None):
+        self.config = config or ESNConfig()
+        self.config.validate()
+        self._fitted = False
+
+    @staticmethod
+    def _nodes():
+        try:
+            import reservoirpy
+            from reservoirpy.nodes import Reservoir, Ridge
+        except ImportError as exc:
+            raise RuntimeError(
+                "ReservoirPy is required for the reservoirpy_esn backend; "
+                "install requirements-ml.txt"
+            ) from exc
+        return reservoirpy, Reservoir, Ridge
+
+    def fit(self, values) -> "ReservoirPyESN":
+        series = np.asarray(values, dtype=float).reshape(-1)
+        if not np.isfinite(series).all():
+            raise ValueError("Training values must all be finite")
+        minimum = max(self.config.washout + 3, 4)
+        if len(series) < minimum:
+            raise ValueError(f"At least {minimum} observations are required")
+        reservoirpy, Reservoir, Ridge = self._nodes()
+        self.scale_min = float(series.min())
+        self.scale_max = float(series.max())
+        self.scale_range = self.scale_max - self.scale_min or 1.0
+        normalized = (series - self.scale_min) / self.scale_range
+        reservoir = Reservoir(
+            units=self.config.reservoir_size,
+            lr=self.config.leak_rate,
+            sr=self.config.spectral_radius,
+            input_scaling=self.config.input_scaling,
+            rc_connectivity=self.config.connectivity,
+            seed=self.config.seed,
+        )
+        self.model = reservoir >> Ridge(ridge=self.config.ridge)
+        self.model.fit(
+            normalized[:-1].reshape(-1, 1),
+            normalized[1:].reshape(-1, 1),
+            warmup=self.config.washout,
+        )
+        self.model_version = getattr(reservoirpy, "__version__", "unknown")
+        self.normalized_history = normalized.reshape(-1, 1)
+        self.training_observations = len(series)
+        self._fitted = True
+        return self
+
+    def predict_next(self) -> float:
+        if not self._fitted:
+            raise RuntimeError("Fit the ReservoirPy ESN before requesting a prediction")
+        if hasattr(self.model, "reset"):
+            self.model.reset()
+        prediction = float(np.asarray(self.model.run(self.normalized_history)).reshape(-1)[-1])
+        return prediction * self.scale_range + self.scale_min
+
+    def metadata(self) -> dict:
+        if not self._fitted:
+            raise RuntimeError("Fit the ReservoirPy ESN before requesting metadata")
+        return {
+            "model_name": self.name,
+            "model_version": self.version,
+            "reservoirpy_version": self.model_version,
+            "training_observations": self.training_observations,
+            "training_min": self.scale_min,
+            "training_max": self.scale_max,
+            "config": asdict(self.config),
+        }
+
+
+class ReservoirPyForecaster:
+    """Expose one ReservoirPy ESN per ticker through the advisor service contract."""
+
+    name = ReservoirPyESN.name
+
+    def __init__(self, config: ESNConfig | None = None):
+        self.config = config or ESNConfig()
+        self.models: dict[str, ReservoirPyESN] = {}
+
+    def predict(self, market_data: pd.DataFrame) -> pd.DataFrame:
+        records = []
+        for ticker, group in market_data.sort_values("date").groupby("ticker"):
+            closes = group["close"].to_numpy(dtype=float)
+            model = ReservoirPyESN(self.config).fit(closes)
+            predicted_close = model.predict_next()
+            latest_close = float(closes[-1])
+            self.models[ticker] = model
+            records.append({
+                "ticker": ticker,
+                "as_of_date": group["date"].iloc[-1],
+                "predicted_close": predicted_close,
+                "horizon": 1,
+                "predicted_return": predicted_close / latest_close - 1.0,
+                "model_name": model.name,
+                "model_version": model.version,
+                "training_observations": len(closes),
+            })
+        return pd.DataFrame.from_records(records)

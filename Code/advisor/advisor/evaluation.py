@@ -7,7 +7,7 @@ from collections.abc import Callable
 import numpy as np
 import pandas as pd
 
-from .forecasting import EchoStateNetwork, ESNConfig, LastCloseModel
+from .forecasting import EchoStateNetwork, ESNConfig, LastCloseModel, ReservoirPyESN
 
 
 def regression_metrics(predictions: pd.DataFrame) -> dict[str, float]:
@@ -73,6 +73,42 @@ def compare_esn_with_baseline(
         max(min_train_size, config.washout + 3), max_steps,
     )
     predictions = pd.concat([baseline, esn], ignore_index=True)
+    metric_rows = []
+    for (model_name, ticker), group in predictions.groupby(["model_name", "ticker"]):
+        metric_rows.append({"model_name": model_name, "ticker": ticker, **regression_metrics(group)})
+    per_ticker = pd.DataFrame(metric_rows)
+    aggregate_rows = []
+    metric_columns = [column for column in per_ticker.columns if column not in ("model_name", "ticker", "observations")]
+    for model_name, group in per_ticker.groupby("model_name"):
+        aggregate_rows.append({
+            "model_name": model_name,
+            "ticker": "ALL",
+            "observations": float(group["observations"].sum()),
+            **{column: float(group[column].mean()) for column in metric_columns},
+        })
+    metrics = pd.concat([per_ticker, pd.DataFrame(aggregate_rows)], ignore_index=True)
+    return predictions, metrics.sort_values(["ticker", "model_name"]).reset_index(drop=True)
+
+
+def compare_reservoirpy_with_baseline(
+    market_data: pd.DataFrame,
+    config: ESNConfig | None = None,
+    min_train_size: int = 100,
+    max_steps: int | None = 100,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare the optional ReservoirPy ESN against the last-close baseline."""
+    config = config or ESNConfig()
+    baseline = walk_forward_predictions(
+        market_data, LastCloseModel, LastCloseModel.name, min_train_size, max_steps
+    )
+    reservoirpy = walk_forward_predictions(
+        market_data,
+        lambda: ReservoirPyESN(config),
+        ReservoirPyESN.name,
+        max(min_train_size, config.washout + 3),
+        max_steps,
+    )
+    predictions = pd.concat([baseline, reservoirpy], ignore_index=True)
     metric_rows = []
     for (model_name, ticker), group in predictions.groupby(["model_name", "ticker"]):
         metric_rows.append({"model_name": model_name, "ticker": ticker, **regression_metrics(group)})

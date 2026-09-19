@@ -1,0 +1,6 @@
+# Optional modelling stack for the unified advisor.
+# The base requirements remain sufficient for offline tests and baseline flows.
+-r requirements.txt
+reservoirpy>=0.3.15,<0.4
+stable-baselines3>=2.3,<3
+finrl>=0.3.7

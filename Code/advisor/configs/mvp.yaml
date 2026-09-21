@@ -23,6 +23,22 @@ backtest:
   slippage_bps: 5.0
   rebalance_every: 1
 
+strategy:
+  framework: finrl
+  algorithm: a2c
+  source_notebook: FinRL/FinRL_PortfolioAllocation_NeurIPS_2020.ipynb
+  observation_schema: rolling_returns_and_weights_v1
+  lookback: 20
+  include_cash: true
+  reward: net_log_return
+  reward_scaling: 100.0
+  total_timesteps: 20000
+  train_end: 2023-06-30
+  validation_end: 2024-06-28
+  test_end: 2025-06-16
+  model_path: ../artifacts/models/finrl_a2c_mvp.zip
+  metadata_path: ../artifacts/models/finrl_a2c_mvp.metadata.json
+
 application:
   default_risk_profile: moderate
   allowed_risk_profiles: [conservative, moderate, growth]

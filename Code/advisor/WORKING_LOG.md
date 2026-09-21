@@ -121,6 +121,11 @@ Delivered:
 
 Status: in progress
 
+Implementation resumed: 2026-09-21. Selected direction: the A2C portfolio
+allocation path from `FinRL_PortfolioAllocation_NeurIPS_2020.ipynb`, adapted
+to include explicit cash, transaction costs, slippage, chronological splits,
+and versioned artifacts required by `UNIFICATION_PLAN.md`.
+
 The next step is to choose one portfolio environment and algorithm from the
 FinRL notebooks, document its observation, action, reward, cash, and rebalance
 contract, and add a reproducible training and artifact boundary. The production

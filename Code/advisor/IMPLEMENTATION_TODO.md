@@ -6,6 +6,17 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-15
 
+## Current Status Snapshot (2026-09-21)
+
+- 28 offline tests pass.
+- Data validation, Yahoo/cache loading, MVP configuration, and reproducible preparation are implemented.
+- NumPy ESN, optional ReservoirPy ESN, moving-average, and last-close forecasters are available.
+- Equal-weight, buy-and-hold, and forecast-ranked strategies are available; chronological backtesting includes costs and risk metrics.
+- A saved FinRL/Stable-Baselines3 policy adapter exists, but no single FinRL training environment and artifact pipeline has been selected.
+- The existing Python Shiny app is still a separate stock explorer and is not connected to `AdvisorService`.
+- Qwen/Smolagents, unified app views, and final untouched-period evidence remain pending.
+- Preserve the current uncommitted strategy and test changes while continuing.
+
 ## Product Scope
 
 The end product is one educational decision-support application, not a bundle
@@ -25,6 +36,7 @@ fair baselines, and read a grounded explanation in the unified Shiny UI.
 | `LSTM vs. RC/simulation.ipynb` | Reservoir-model comparison evidence | Optional documented benchmark, not the production path | Pending review |
 | `stock-app/app-express.py`, `stocks.py`, `styles.css` | Ticker selection, historical charts, controls, and Shiny styling | One unified Shiny app using `AdvisorService` | Pending |
 | `stock-app/app-core.py` | Duplicate Shiny implementation | Retire only after Express feature parity | Pending |
+| `Code/Untitled.ipynb` | Unclassified experiment | Provenance review; do not use in production until classified | Pending |
 
 ## Phase 0: Provenance And Repository Hygiene
 
@@ -45,6 +57,8 @@ Exit evidence: every retained notebook has a stated purpose and provenance.
 - [ ] Establish the supported Python version after testing the full optional stack.
 - [x] Add a versioned MVP configuration for five tickers, dates, seeds, costs, paths, and risk profiles.
 - [x] Consolidate runtime and optional-model dependencies into documented install profiles (`requirements.txt` and `requirements-ml.txt`).
+- [ ] Merge the existing app dependencies (`shiny`, `shinywidgets`, `plotly`, `faicons`, `yfinance`, and the websocket pin) into the unified install profile.
+- [ ] Keep Python Shiny as the single UI library and retire duplicate app implementations only after feature parity.
 - [x] Add a `prepare_data` command that writes a validated dataset and deterministic metadata.
 
 Exit evidence: a fresh environment creates the same validated cached dataset and runs offline tests.
@@ -56,7 +70,7 @@ Exit evidence: a fresh environment creates the same validated cached dataset and
 - [x] Add optional ReservoirPy ESN support and a backend-selecting CLI.
 - [x] Implement leakage-free chronological walk-forward evaluation.
 - [x] Report MAE, RMSE, MAPE, R-squared, and directional accuracy.
-- [ ] Add moving-average baseline and decide whether ARIMA is justified.
+- [x] Add moving-average baseline; decide separately whether ARIMA is justified.
 - [ ] Evaluate multiple seeds and report mean and dispersion.
 - [ ] Save complete NumPy and ReservoirPy forecast artifacts with configuration, scaler, data interval, and metrics.
 - [ ] Reproduce saved-artifact metrics on a fixed untouched period.
@@ -69,8 +83,8 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Model transaction costs, slippage, turnover, drawdown, and risk metrics.
 - [x] Enforce long-only asset-plus-cash weight constraints.
 - [x] Define a shared policy contract and saved FinRL/SB3 policy adapter.
-- [ ] Add a forecast-ranked baseline strategy.
-- [ ] Select one FinRL portfolio environment and algorithm from the notebooks.
+- [x] Add a forecast-ranked baseline strategy with deterministic ranking, cash threshold, and warm-up behavior.
+- [ ] Select one FinRL portfolio environment and algorithm from the notebooks; retire other tutorial variants from the production path.
 - [ ] Define and version its observation space, action space, reward, cash handling, and rebalance schedule.
 - [ ] Add a reproducible FinRL training command that saves an approved policy artifact.
 - [ ] Backtest FinRL, equal-weight, buy-and-hold, and a market-index benchmark over identical unseen dates.
@@ -128,5 +142,6 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
 
 ## Current Next Item
 
-Add the forecast-ranked baseline strategy. It is the next honest allocation
-baseline needed before selecting and training a FinRL portfolio policy.
+Select one FinRL environment and algorithm from the notebooks and define its
+versioned observation, action, reward, cash, and rebalance contract. This is
+the next step before training an approved strategy artifact.

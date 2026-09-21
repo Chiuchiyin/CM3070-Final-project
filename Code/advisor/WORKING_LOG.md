@@ -103,11 +103,29 @@ Delivered:
 
 ### Current milestone: forecast-ranked strategy
 
-Status: in progress
+Status: complete
 
 Work started: 2026-09-15. This milestone begins only after the present working
 log update and will add the next baseline required by `UNIFICATION_PLAN.md`
 before selecting and training one FinRL strategy.
+
+Delivered:
+
+- Added a moving-average return forecaster for a transparent non-ESN baseline.
+- Added deterministic forecast-ranked allocation with top-k selection, threshold-to-cash behavior, and tie-breaking.
+- Added chronological `ForecastRankedPolicy` backtesting with warm-up cash handling and no future observations.
+- Added CLI options and tests for the new baseline.
+- Verified the complete offline suite with 28 passing tests.
+
+### Current milestone: select and specify one FinRL training path
+
+Status: in progress
+
+The next step is to choose one portfolio environment and algorithm from the
+FinRL notebooks, document its observation, action, reward, cash, and rebalance
+contract, and add a reproducible training and artifact boundary. The production
+UI will use Python Shiny, matching the existing stock app, through
+`AdvisorService`; it will not call notebooks directly.
 
 ### Guardrails
 

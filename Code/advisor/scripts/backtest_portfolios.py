@@ -14,9 +14,11 @@ from advisor.backtesting import (  # noqa: E402
     BacktestConfig,
     BuyAndHoldPolicy,
     EqualWeightPolicy,
+    ForecastRankedPolicy,
     run_backtest,
 )
 from advisor.data import CsvMarketDataProvider  # noqa: E402
+from advisor.forecasting import MovingAverageForecaster  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,6 +31,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--transaction-cost-bps", type=float, default=10.0)
     parser.add_argument("--slippage-bps", type=float, default=5.0)
     parser.add_argument("--rebalance-every", type=int, default=1)
+    parser.add_argument("--forecast-window", type=int, default=20)
+    parser.add_argument("--forecast-top-k", type=int, default=3)
+    parser.add_argument(
+        "--forecast-min-return",
+        type=float,
+        help="Optional minimum predicted return; hold cash if no asset qualifies",
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/backtesting"))
     return parser.parse_args()
 
@@ -41,7 +50,17 @@ def main() -> None:
         transaction_cost_bps=args.transaction_cost_bps,
         slippage_bps=args.slippage_bps,
     )
-    policies = [EqualWeightPolicy(args.rebalance_every), BuyAndHoldPolicy()]
+    forecast_policy = ForecastRankedPolicy(
+        MovingAverageForecaster(args.forecast_window),
+        top_k=args.forecast_top_k,
+        rebalance_every=args.rebalance_every,
+        minimum_predicted_return=args.forecast_min_return,
+    )
+    policies = [
+        EqualWeightPolicy(args.rebalance_every),
+        BuyAndHoldPolicy(),
+        forecast_policy,
+    ]
     results = [run_backtest(market_data, policy, config) for policy in policies]
 
     args.output_dir.mkdir(parents=True, exist_ok=True)

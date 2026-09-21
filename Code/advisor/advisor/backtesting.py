@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from .data import validate_market_data
+from .strategy import ForecastRankedStrategy
 
 CASH = "CASH"
 
@@ -81,6 +82,51 @@ class BuyAndHoldPolicy:
             return None
         tickers = sorted(history["ticker"].unique())
         return pd.Series(1.0 / len(tickers), index=tickers, dtype=float)
+
+
+class ForecastRankedPolicy:
+    """Refit a forecaster on past data and hold the top-ranked assets."""
+
+    def __init__(
+        self,
+        forecaster,
+        top_k: int = 3,
+        rebalance_every: int = 1,
+        min_history: int | None = None,
+        minimum_predicted_return: float | None = None,
+    ):
+        if rebalance_every <= 0:
+            raise ValueError("rebalance_every must be positive")
+        inferred_minimum = getattr(forecaster, "minimum_observations", 1)
+        self.min_history = inferred_minimum if min_history is None else min_history
+        if self.min_history <= 0:
+            raise ValueError("min_history must be positive")
+        self.forecaster = forecaster
+        self.rebalance_every = rebalance_every
+        self.strategy = ForecastRankedStrategy(top_k, minimum_predicted_return)
+        forecaster_name = getattr(
+            forecaster, "name", forecaster.__class__.__name__.lower()
+        )
+        self.name = f"forecast_ranked_{forecaster_name}"
+
+    def target_weights(
+        self, history: pd.DataFrame, current_weights: pd.Series
+    ) -> pd.Series | None:
+        step = history["date"].nunique() - 1
+        if step % self.rebalance_every:
+            return None
+        tickers = sorted(history["ticker"].unique())
+        observations = history.groupby("ticker")["close"].count().reindex(tickers)
+        if (observations < self.min_history).any():
+            return pd.Series({CASH: 1.0}, dtype=float)
+
+        forecasts = self.forecaster.predict(history)
+        allocation = self.strategy.allocate(forecasts)
+        weights = allocation.set_index("ticker")["weight"].reindex(
+            tickers, fill_value=0.0
+        )
+        weights.loc[CASH] = float(allocation["cash_weight"].iloc[0])
+        return weights
 
 
 def validate_weights(weights: pd.Series, tickers: list[str]) -> pd.Series:

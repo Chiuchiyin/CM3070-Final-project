@@ -42,6 +42,51 @@ class LastCloseForecaster:
         return result.reset_index(drop=True)
 
 
+class MovingAverageForecaster:
+    """Forecast the next close from the trailing mean one-period return."""
+
+    name = "moving_average_return"
+    version = "moving_average_return_v1"
+
+    def __init__(self, window: int = 20):
+        if window <= 0:
+            raise ValueError("window must be positive")
+        self.window = window
+
+    @property
+    def minimum_observations(self) -> int:
+        return self.window + 1
+
+    def predict(self, market_data: pd.DataFrame) -> pd.DataFrame:
+        records = []
+        for ticker, group in market_data.sort_values("date").groupby("ticker"):
+            closes = group["close"].to_numpy(dtype=float)
+            if len(closes) < self.minimum_observations:
+                raise ValueError(
+                    f"{ticker} requires at least {self.minimum_observations} observations "
+                    f"for a {self.window}-period moving-average return forecast"
+                )
+            recent_closes = closes[-self.minimum_observations :]
+            recent_returns = recent_closes[1:] / recent_closes[:-1] - 1.0
+            predicted_return = float(np.mean(recent_returns))
+            latest_close = float(closes[-1])
+            records.append(
+                {
+                    "ticker": ticker,
+                    "as_of_date": group["date"].iloc[-1],
+                    "predicted_close": latest_close * (1.0 + predicted_return),
+                    "horizon": 1,
+                    "predicted_return": predicted_return,
+                    "model_name": self.name,
+                    "model_version": self.version,
+                    "training_observations": len(closes),
+                }
+            )
+        if not records:
+            raise ValueError("Cannot forecast an empty ticker universe")
+        return pd.DataFrame.from_records(records)
+
+
 @dataclass(frozen=True)
 class ESNConfig:
     reservoir_size: int = 50

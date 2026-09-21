@@ -6,7 +6,13 @@ import numpy as np
 import pandas as pd
 
 from advisor.evaluation import compare_esn_with_baseline
-from advisor.forecasting import EchoStateNetwork, ESNConfig, ReservoirPyESN, ReservoirPyForecaster
+from advisor.forecasting import (
+    EchoStateNetwork,
+    ESNConfig,
+    MovingAverageForecaster,
+    ReservoirPyESN,
+    ReservoirPyForecaster,
+)
 
 
 class ESNTests(unittest.TestCase):
@@ -45,6 +51,17 @@ class ESNTests(unittest.TestCase):
     def test_reservoirpy_forecaster_exposes_the_same_service_identity(self):
         self.assertEqual(ReservoirPyForecaster.name, "reservoirpy_esn")
         self.assertEqual(ReservoirPyESN.name, "reservoirpy_esn")
+
+    def test_moving_average_forecaster_uses_only_trailing_returns(self):
+        dates = pd.date_range("2024-01-01", periods=4, freq="B")
+        frame = pd.DataFrame(
+            {"date": dates, "ticker": "TEST", "close": [100.0, 110.0, 99.0, 108.9]}
+        )
+        forecast = MovingAverageForecaster(window=2).predict(frame).iloc[0]
+
+        self.assertAlmostEqual(forecast["predicted_return"], 0.0)
+        self.assertAlmostEqual(forecast["predicted_close"], 108.9)
+        self.assertEqual(forecast["as_of_date"], dates[-1])
 
 
 if __name__ == "__main__":

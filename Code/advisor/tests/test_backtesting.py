@@ -8,9 +8,11 @@ from advisor.backtesting import (
     BacktestConfig,
     BuyAndHoldPolicy,
     EqualWeightPolicy,
+    ForecastRankedPolicy,
     run_backtest,
 )
 from advisor.data import CsvMarketDataProvider
+from advisor.forecasting import MovingAverageForecaster
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "market_data.csv"
@@ -93,6 +95,43 @@ class BacktestingTests(unittest.TestCase):
         }
         self.assertEqual(set(metrics), expected)
         self.assertLessEqual(metrics["maximum_drawdown"], 0.0)
+
+    def test_forecast_ranked_policy_holds_cash_during_warmup_then_selects_top_asset(self):
+        policy = ForecastRankedPolicy(
+            MovingAverageForecaster(window=2), top_k=1
+        )
+        result = run_backtest(self.market_data, policy)
+        weights = result.weights.pivot(index="date", columns="ticker", values="weight")
+
+        self.assertAlmostEqual(weights.iloc[0][CASH], 1.0)
+        self.assertAlmostEqual(weights.iloc[1][CASH], 1.0)
+        self.assertAlmostEqual(weights.iloc[2]["AAPL"], 1.0)
+        self.assertAlmostEqual(weights.iloc[2]["MSFT"], 0.0)
+        self.assertAlmostEqual(weights.iloc[2][CASH], 0.0)
+
+    def test_forecast_ranked_policy_passes_only_current_history_to_forecaster(self):
+        class RecordingForecaster:
+            name = "recording"
+            minimum_observations = 1
+
+            def __init__(self):
+                self.seen = []
+
+            def predict(self, history):
+                self.seen.append(history["date"].max())
+                tickers = sorted(history["ticker"].unique())
+                return pd.DataFrame(
+                    {
+                        "ticker": tickers,
+                        "predicted_return": range(len(tickers)),
+                    }
+                )
+
+        forecaster = RecordingForecaster()
+        result = run_backtest(
+            self.market_data, ForecastRankedPolicy(forecaster, top_k=1)
+        )
+        self.assertEqual(forecaster.seen, result.returns["period_start"].tolist())
 
 
 if __name__ == "__main__":

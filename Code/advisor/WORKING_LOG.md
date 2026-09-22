@@ -126,6 +126,19 @@ allocation path from `FinRL_PortfolioAllocation_NeurIPS_2020.ipynb`, adapted
 to include explicit cash, transaction costs, slippage, chronological splits,
 and versioned artifacts required by `UNIFICATION_PLAN.md`.
 
+Delivered:
+
+- Added the versioned A2C strategy section to `configs/mvp.yaml`.
+- Added `finrl_training.py` with the strategy contract loader and chronological split validation.
+- Added `FINRL_POLICY_SPEC.md` documenting the selected notebook path and production observation/action/reward/cash contract.
+- Added contract tests and merged the existing Python Shiny dependencies into the unified runtime requirements.
+
+The live FinRL trainer and saved policy artifact remain pending because the optional ReservoirPy/FinRL stack is not installed in this environment.
+
+### Current milestone: train and validate the FinRL artifact
+
+Status: pending
+
 The next step is to choose one portfolio environment and algorithm from the
 FinRL notebooks, document its observation, action, reward, cash, and rebalance
 contract, and add a reproducible training and artifact boundary. The production

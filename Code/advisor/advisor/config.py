@@ -34,20 +34,6 @@ class MVPConfig:
     transaction_cost_bps: float
     slippage_bps: float
     rebalance_every: int
-    strategy_framework: str
-    strategy_algorithm: str
-    strategy_source_notebook: str
-    strategy_observation_schema: str
-    strategy_lookback: int
-    strategy_include_cash: bool
-    strategy_reward: str
-    strategy_reward_scaling: float
-    strategy_total_timesteps: int
-    strategy_train_end: str
-    strategy_validation_end: str
-    strategy_test_end: str
-    strategy_model_path: Path
-    strategy_metadata_path: Path
     default_risk_profile: str
     allowed_risk_profiles: tuple[str, ...]
 

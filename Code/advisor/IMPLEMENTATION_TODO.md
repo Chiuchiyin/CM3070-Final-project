@@ -4,7 +4,7 @@ This is the execution checklist for [the unification plan](../UNIFICATION_PLAN.m
 It keeps new work inside `Code/advisor/` until the MVP is demonstrably complete.
 An item is complete only when its stated verification evidence exists.
 
-Last updated: 2026-09-15
+Last updated: 2026-09-22
 
 ## Current Status Snapshot (2026-09-21)
 
@@ -12,7 +12,7 @@ Last updated: 2026-09-15
 - Data validation, Yahoo/cache loading, MVP configuration, and reproducible preparation are implemented.
 - NumPy ESN, optional ReservoirPy ESN, moving-average, and last-close forecasters are available.
 - Equal-weight, buy-and-hold, and forecast-ranked strategies are available; chronological backtesting includes costs and risk metrics.
-- A saved FinRL/Stable-Baselines3 policy adapter exists, but no single FinRL training environment and artifact pipeline has been selected.
+- The FinRL A2C portfolio path is selected and specified; a trained artifact and live optional-stack run remain pending.
 - The existing Python Shiny app is still a separate stock explorer and is not connected to `AdvisorService`.
 - Qwen/Smolagents, unified app views, and final untouched-period evidence remain pending.
 - Preserve the current uncommitted strategy and test changes while continuing.
@@ -84,8 +84,8 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Enforce long-only asset-plus-cash weight constraints.
 - [x] Define a shared policy contract and saved FinRL/SB3 policy adapter.
 - [x] Add a forecast-ranked baseline strategy with deterministic ranking, cash threshold, and warm-up behavior.
-- [ ] Select one FinRL portfolio environment and algorithm from the notebooks; retire other tutorial variants from the production path.
-- [ ] Define and version its observation space, action space, reward, cash handling, and rebalance schedule.
+- [x] Select the A2C portfolio-allocation path from the FinRL notebooks; retire other tutorial variants from the production path.
+- [x] Define and version its observation space, action space, reward, cash handling, and rebalance schedule.
 - [ ] Add a reproducible FinRL training command that saves an approved policy artifact.
 - [ ] Backtest FinRL, equal-weight, buy-and-hold, and a market-index benchmark over identical unseen dates.
 - [ ] Validate live ReservoirPy and FinRL paths after installing `requirements-ml.txt`.
@@ -142,6 +142,6 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
 
 ## Current Next Item
 
-Select one FinRL environment and algorithm from the notebooks and define its
-versioned observation, action, reward, cash, and rebalance contract. This is
-the next step before training an approved strategy artifact.
+Run the selected FinRL A2C path in the optional modelling environment, save an
+approved policy artifact, and validate it on the configured validation period
+before opening the untouched test period.

@@ -48,3 +48,9 @@ def load_strategy_config(path: str | Path) -> StrategyConfig:
 def chronological_partitions(market_data, train_end, validation_end, test_end):
     data = validate_market_data(market_data)
     ends = [date.fromisoformat(value) for value in (train_end, validation_end, test_end)]
+    timestamps = [pd.Timestamp(value) for value in ends]
+    partitions = {
+        train: data[data[date] <= timestamps[0]],
+        validation: data[(data[date] > timestamps[0]) & (data[date] <= timestamps[1])],
+        test: data[(data[date] > timestamps[1]) & (data[date] <= timestamps[2])],
+    }

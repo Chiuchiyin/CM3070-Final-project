@@ -170,3 +170,68 @@ UI will use Python Shiny, matching the existing stock app, through
 - Avoid look-ahead: weights chosen for a date earn only subsequent returns.
 - Keep strategy allocation independent from FinRL and UI integrations.
 - Treat backtest output as research evidence, not guaranteed future performance.
+
+## 2026-09-23
+
+### Completed milestone: unified baseline service and Shiny application
+
+Status: complete for the dependency-light MVP path
+
+Delivered:
+
+- Expanded `AdvisorService.analyse` with `as_of_date` and supported risk
+  profiles (`conservative`, `moderate`, and `growth`).
+- Added risk-profile cash floors while preserving the original fully invested
+  behavior when no profile is supplied.
+- Extended `AnalysisResult` with market data, freshness warnings, model and
+  dataset versions, allocation changes, and baseline backtest metrics.
+- Added an equal-weight historical backtest to service results when the input
+  contains at least two dates.
+- Updated the deterministic explanation to report supplied forecasts,
+  allocations, cash, warnings, and historical metrics only.
+- Replaced the stock-only `app-express.py` flow with one AdvisorService-driven
+  Python Shiny application containing Summary, Portfolio, Forecast, and
+  Evaluation views.
+- Added automatic frozen-fixture mode so the baseline application can run
+  without network access. `ADVISOR_DATA_PATH` can override the fixture.
+- Updated `UNIFICATION_PLAN.md`, `IMPLEMENTATION_TODO.md`, and the advisor
+  README with the new architecture, commands, status, and change history.
+- Fixed `chronological_partitions` so FinRL boundary tests can use compact
+  synthetic frames while provider-level OHLCV validation remains strict.
+
+Verification:
+
+- 30 offline unit tests pass with `PYTHONPATH=Code/advisor`.
+- Updated service, explanation, training helper, and Shiny modules compile
+  successfully.
+- Manual fixture run confirmed conservative cash allocation, baseline metrics,
+  and grounded explanation output.
+
+### Remaining implementation work
+
+Status: active
+
+- Install and validate the optional ReservoirPy/FinRL stack.
+- Add the reproducible FinRL A2C training command and save an approved policy
+  artifact.
+- Evaluate FinRL, equal-weight, buy-and-hold, and index baselines on identical
+  untouched dates.
+- Add Qwen/Smolagents as an optional explanation adapter with numeric-claim
+  validation and deterministic fallback.
+- Add explicit Shiny handling for empty data, short ranges, model failures,
+  loading, and partial results, then add UI smoke tests.
+- Complete notebook provenance classification and final generated evaluation
+  evidence.
+
+The baseline vertical slice is now connected end to end; remaining work is
+optional-model validation, resilience coverage, provenance, and final evidence.
+
+### Environment update: CM3070-FP
+
+The project verification environment is `CM3070-FP` at
+`C:\\Users\\silve\\anaconda3\\envs\\CM3070-FP`. The full offline advisor
+suite was rerun with that interpreter and passed all 30 tests. Its package list
+includes FinRL 0.3.8, ReservoirPy 0.3.13.post1, Stable-Baselines3 2.6.1a1,
+Smolagents 1.16.1, Transformers 4.52.3, Shiny 1.4.0, and yfinance 0.2.61.
+Future training, evaluation, and app smoke-test commands should use this
+environment rather than the base interpreter.

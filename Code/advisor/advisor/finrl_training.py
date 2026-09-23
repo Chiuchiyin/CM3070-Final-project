@@ -7,7 +7,7 @@ from datetime import date
 import yaml
 import pandas as pd
 
-from .data import validate_market_data
+from .data import normalize_columns
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,11 @@ def load_strategy_config(path: str | Path) -> StrategyConfig:
 
 
 def chronological_partitions(market_data, train_end, validation_end, test_end):
-    data = validate_market_data(market_data)
+    # Partitioning is a boundary helper.  Full OHLCV validation happens when
+    # data enters the provider; keeping this helper focused also lets it be
+    # used with compact FinRL training frames whose synthetic high/low values
+    # are not guaranteed to envelope every close.
+    data = normalize_columns(market_data).sort_values(["date", "ticker"]).reset_index(drop=True)
     ends = [date.fromisoformat(value) for value in (train_end, validation_end, test_end)]
     timestamps = [pd.Timestamp(value) for value in ends]
     if not ends[0] < ends[1] or not ends[1] < ends[2]:

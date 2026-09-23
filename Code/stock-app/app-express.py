@@ -1,141 +1,92 @@
+"""Unified Python Shiny interface for the educational advisor."""
+from __future__ import annotations
+import os, sys
 from pathlib import Path
-
 import pandas as pd
 import plotly.graph_objects as go
-import yfinance as yf
-from faicons import icon_svg
 from shiny import reactive
 from shiny.express import input, render, ui
-from shiny.ui import output_ui
 from shinywidgets import render_plotly
-from stocks import stocks
 
-# Default to the last 6 months
-end = pd.Timestamp.now()
-start = end - pd.Timedelta(weeks=26)
+ADVISOR_ROOT = Path(__file__).resolve().parents[1] / "advisor"
+sys.path.insert(0, str(ADVISOR_ROOT))
+from advisor.data import CsvMarketDataProvider, YahooMarketDataProvider
+from advisor.service import AdvisorService
 
+DEFAULT_TICKERS = ["AAPL", "MSFT", "JPM", "JNJ", "PG"]
+fixture = ADVISOR_ROOT / "tests" / "fixtures" / "market_data.csv"
+data_path = os.getenv("ADVISOR_DATA_PATH")
+if data_path or fixture.exists():
+    fixture_path = Path(data_path) if data_path else fixture
+    provider = CsvMarketDataProvider(fixture_path)
+    if not data_path:
+        DEFAULT_TICKERS = sorted(pd.read_csv(fixture_path)["ticker"].unique().tolist())
+else:
+    provider = YahooMarketDataProvider(ADVISOR_ROOT.parent / "data" / "cache")
+service = AdvisorService(provider, dataset_version="mvp_runtime")
 
-ui.page_opts(title="Stock explorer", fillable=True)
-
+ui.page_opts(title="Agentic Financial Advisor", fillable=True)
 with ui.sidebar():
-    ui.input_selectize("ticker", "Select Stocks", choices=stocks, selected="AAPL")
-    ui.input_date_range("dates", "Select dates", start=start, end=end)
+    ui.h4("Analysis inputs")
+    ui.input_selectize("tickers", "Stocks", choices=DEFAULT_TICKERS, selected=DEFAULT_TICKERS, multiple=True)
+    ui.input_date("as_of", "As-of date", value=None)
+    ui.input_select("risk_profile", "Risk profile", choices={"conservative": "Conservative", "moderate": "Moderate", "growth": "Growth"}, selected="moderate")
+    ui.input_action_button("analyse", "Analyse", class_="btn-primary")
+    ui.p("Educational decision-support prototype. Simulated allocations only.")
 
+@reactive.calc
+@reactive.event(input.analyse)
+def analysis():
+    value = input.as_of()
+    return service.analyse(tickers=input.tickers(), as_of_date=value if value else None, risk_profile=input.risk_profile())
 
 with ui.layout_column_wrap(fill=False):
-    with ui.value_box(showcase=icon_svg("dollar-sign")):
-        "Current Price"
+    with ui.value_box():
+        "Latest close"
+        @render.text
+        def latest_close():
+            result = analysis()
+            return str(result.market_data.sort_values("date")["date"].iloc[-1].date())
+    with ui.value_box():
+        "Expected return"
+        @render.text
+        def expected_return():
+            return f"{analysis().forecasts['predicted_return'].mean():+.2%}"
+    with ui.value_box():
+        "Cash allocation"
+        @render.text
+        def cash_allocation():
+            return f"{analysis().allocations['cash_weight'].iloc[0]:.1%}"
 
-        @render.ui
-        def price():
-            close = get_data()["Close"]
-            return f"{close.iloc[-1]:.2f}"
-
-    with ui.value_box(showcase=output_ui("change_icon")):
-        "Change"
-
-        @render.ui
-        def change():
-            return f"${get_change():.2f}"
-
-    with ui.value_box(showcase=icon_svg("percent")):
-        "Percent Change"
-
-        @render.ui
-        def change_percent():
-            return f"{get_change_percent():.2f}%"
-
-
-with ui.layout_columns(col_widths=[9, 3]):
-    with ui.card(full_screen=True):
-        ui.card_header("Price history")
-
-        @render_plotly
-        def price_history():
-            df = get_data().reset_index()
-            fig = go.Figure(
-                data=[
-                    go.Candlestick(
-                        x=df["Date"],
-                        open=df["Open"],
-                        high=df["High"],
-                        low=df["Low"],
-                        close=df["Close"],
-                        increasing_line_color="#44bb70",
-                        decreasing_line_color="#040548",
-                        name=input.ticker(),
-                    )
-                ]
-            )
-            df["SMA"] = df["Close"].rolling(window=20).mean()
-            fig.add_scatter(
-                x=df["Date"],
-                y=df["SMA"],
-                mode="lines",
-                name="SMA (20)",
-                line={"color": "orange", "dash": "dash"},
-            )
-            fig.update_layout(
-                hovermode="x unified",
-                legend={
-                    "orientation": "h",
-                    "yanchor": "top",
-                    "y": 1,
-                    "xanchor": "right",
-                    "x": 1,
-                },
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-            )
-            return fig
-
-    with ui.card():
-        ui.card_header("Latest data")
-
+with ui.navset_tab():
+    with ui.nav_panel("Summary"):
+        @render.text
+        def explanation(): return analysis().explanation
         @render.data_frame
-        def latest_data():
-            x = get_data()[:1].T.reset_index()
-            x.columns = ["Category", "Value"]
-            x["Value"] = x["Value"].apply(lambda v: f"{v:.1f}")
-            return x
-
+        def warnings():
+            rows = analysis().warnings or ["No data-quality warnings."]
+            return pd.DataFrame({"Status": rows})
+    with ui.nav_panel("Portfolio"):
+        @render.data_frame
+        def allocations(): return analysis().allocations
+        @render.data_frame
+        def allocation_changes(): return analysis().allocation_changes
+    with ui.nav_panel("Forecast"):
+        @render_plotly
+        def forecast_chart():
+            result = analysis(); frame = result.market_data.sort_values("date"); fig = go.Figure()
+            for ticker, group in frame.groupby("ticker"):
+                fig.add_scatter(x=group["date"], y=group["close"], mode="lines", name=f"{ticker} close")
+                forecast = result.forecasts[result.forecasts["ticker"] == ticker].iloc[0]
+                fig.add_scatter(x=[forecast["as_of_date"]], y=[forecast["predicted_close"]], mode="markers", name=f"{ticker} forecast")
+            fig.update_layout(hovermode="x unified", yaxis_title="Close", template="plotly_white")
+            return fig
+        @render.data_frame
+        def forecast_table(): return analysis().forecasts
+    with ui.nav_panel("Evaluation"):
+        @render.data_frame
+        def evaluation_metrics():
+            result = analysis(); rows = [{"strategy": n, **m} for n, m in result.backtest_metrics.items()]
+            return pd.DataFrame(rows) if rows else pd.DataFrame({"status": ["Backtest unavailable"]})
 
 ui.include_css(Path(__file__).parent / "styles.css")
-
-
-@reactive.calc
-def get_ticker():
-    return yf.Ticker(input.ticker())
-
-
-@reactive.calc
-def get_data():
-    dates = input.dates()
-    return get_ticker().history(start=dates[0], end=dates[1])
-
-
-@reactive.calc
-def get_change():
-    close = get_data()["Close"]
-    if len(close) < 2:
-        return 0.0
-    return close.iloc[-1] - close.iloc[-2]
-
-
-@reactive.calc
-def get_change_percent():
-    close = get_data()["Close"]
-    if len(close) < 2:
-        return 0.0
-    change = close.iloc[-1] - close.iloc[-2]
-    return change / close.iloc[-2] * 100
-
-
-with ui.hold():
-
-    @render.ui
-    def change_icon():
-        change = get_change()
-        icon = icon_svg("arrow-up" if change >= 0 else "arrow-down")
-        icon.add_class(f"text-{('success' if change >= 0 else 'danger')}")
-        return icon

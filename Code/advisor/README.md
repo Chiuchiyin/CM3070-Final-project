@@ -1,6 +1,9 @@
 # Unified advisor vertical slice
 
-This folder is the isolated implementation path for the project unification. Existing notebooks and `Code/stock-app/` are intentionally unchanged.
+This folder is the implementation path for the project unification. The
+notebooks remain research and provenance material; the production workflow is
+the shared `AdvisorService` consumed by the Python Shiny app in
+`Code/stock-app/app-express.py`.
 
 The current slice is dependency-light and works offline:
 
@@ -16,12 +19,26 @@ The current slice is dependency-light and works offline:
 - chronological portfolio backtesting with no future data exposed to policies;
 - equal-weight rebalancing and buy-and-hold baselines;
 - transaction costs, slippage, portfolio risk metrics, and turnover reporting.
+- risk-profile cash floors, freshness warnings, allocation changes, and
+  baseline metrics in the service result;
+- Summary, Portfolio, Forecast, and Evaluation views in the unified Shiny app.
 
 Run from this directory (the package is intentionally kept directly under `advisor/`):
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
+
+Launch the cached Shiny application from the repository root:
+
+```powershell
+shiny run --reload Code/stock-app/app-express.py
+```
+
+The app automatically uses `tests/fixtures/market_data.csv` when it is
+available, so the complete baseline workflow works without network access.
+Set `ADVISOR_DATA_PATH` to use another canonical CSV, or remove the fixture
+and configure the Yahoo cache provider for live data.
 
 Prepare the versioned five-stock MVP dataset from Yahoo Finance (or its local
 cache):
@@ -47,7 +64,10 @@ Try the service interactively:
 python -c "from pathlib import Path; from advisor.data import CsvMarketDataProvider; from advisor.service import AdvisorService; r=AdvisorService(CsvMarketDataProvider(Path('tests/fixtures/market_data.csv'))).analyse(['AAPL','MSFT']); print(r.explanation); print(r.allocations)"
 ```
 
-The next replacement should preserve the `AdvisorService` boundary: add portfolio backtesting and a saved FinRL strategy, then an optional Qwen explainer, and finally connect the result to Shiny.
+The next replacement should preserve the `AdvisorService` boundary: add a
+saved FinRL strategy and optional Qwen/Smolagents explainer, then generate the
+final untouched-period evidence. The baseline service and Shiny workflow are
+already connected.
 
 Evaluate ESN forecasting on the existing historical data:
 

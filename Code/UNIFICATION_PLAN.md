@@ -1,5 +1,12 @@
 # Unification Plan: Agentic Financial Advisor
 
+> **Implementation update — 2026-09-23:** The baseline vertical slice is now
+> unified. `AdvisorService` supplies forecasts, risk-constrained allocations,
+> warnings, allocation changes, and baseline metrics to one Python Shiny app.
+> The deterministic explanation is grounded in those structured results. The
+> remaining work is optional-stack evidence: approved FinRL artifacts,
+> Qwen/Smolagents integration, and final untouched-period evaluation.
+
 ## 1. Goal
 
 Turn the current collection of research notebooks and the Shiny stock explorer into one reproducible application that:

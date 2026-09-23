@@ -1,4 +1,4 @@
-"""Selected FinRL A2C training contract."""
+﻿"""Selected FinRL A2C training contract."""
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -49,8 +49,14 @@ def chronological_partitions(market_data, train_end, validation_end, test_end):
     data = validate_market_data(market_data)
     ends = [date.fromisoformat(value) for value in (train_end, validation_end, test_end)]
     timestamps = [pd.Timestamp(value) for value in ends]
+    if not ends[0] < ends[1] or not ends[1] < ends[2]:
+        raise ValueError("Strategy dates must satisfy train < validation < test")
     partitions = {
-        train: data[data[date] <= timestamps[0]],
-        validation: data[(data[date] > timestamps[0]) & (data[date] <= timestamps[1])],
-        test: data[(data[date] > timestamps[1]) & (data[date] <= timestamps[2])],
+        "train": data[data["date"] <= timestamps[0]],
+        "validation": data[(data["date"] > timestamps[0]) & (data["date"] <= timestamps[1])],
+        "test": data[(data["date"] > timestamps[1]) & (data["date"] <= timestamps[2])],
     }
+    if any(frame.empty for frame in partitions.values()):
+        raise ValueError("Train, validation, and test partitions must be non-empty")
+    return {name: frame.reset_index(drop=True) for name, frame in partitions.items()}
+

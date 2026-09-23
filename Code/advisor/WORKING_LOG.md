@@ -139,6 +139,25 @@ The live FinRL trainer and saved policy artifact remain pending because the opti
 
 Status: pending
 
+### Deferred items noted: 2026-09-23
+
+- FinRL A2C training and live ReservoirPy/FinRL validation are skipped for now:
+  the optional modelling stack is unavailable in the current environment and
+  the interrupted training-module edits must not be guessed or force-completed.
+- Git commit/push is deferred until the next verified implementation batch;
+  no unverified FinRL artifact will be committed.
+- A temporary Windows sandbox-helper lock blocked normal shell access during
+  this continuation. Elevated read-only access was used to resume safely.
+
+### Current feasible milestone: unified Shiny application scaffold
+
+Status: in progress
+
+The next work will focus on the same Python Shiny library used by
+`Code/stock-app`, preserving ticker selection, date ranges, latest-close and
+change metrics, candlestick/SMA charts, while adding the advisor-service
+integration boundary. FinRL training remains explicitly deferred above.
+
 The next step is to choose one portfolio environment and algorithm from the
 FinRL notebooks, document its observation, action, reward, cash, and rebalance
 contract, and add a reproducible training and artifact boundary. The production

@@ -35,6 +35,11 @@
 > educational-use, data-date, model-version, dataset-version, and risk-profile
 > disclosures.
 
+> **Verification update — 2026-09-27:** Phase 7 offline coverage now includes
+> scaling, observation construction, allocation constraints, risk metrics,
+> explanation fallback, service integration, and Shiny smoke checks. Repository
+> ignore rules and the versioned `SWH` to `SHW` correction are in place.
+
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are

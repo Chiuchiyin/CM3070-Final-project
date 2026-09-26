@@ -357,6 +357,29 @@ Smolagents 1.16.1, Transformers 4.52.3, Shiny 1.4.0, and yfinance 0.2.61.
 Future training, evaluation, and app smoke-test commands should use this
 environment rather than the base interpreter.
 
+### Completed milestone: verification and repository hygiene
+
+Status: complete for offline evidence
+
+Delivered:
+
+- Audited the test suite against Phase 7 requirements. Existing tests cover
+  training-only scaling, observation construction, allocation constraints,
+  transaction-cost metrics, explanation fallback, service integration, and
+  Shiny smoke behavior.
+- Expanded root ignore rules for notebook checkpoints, model/evaluation
+  artifacts, caches, logs, TensorBoard events, and generated charts.
+- Added `Code/advisor/configs/universe.yaml` with the corrected `SWH` to `SHW`
+  ticker mapping.
+- Recorded Python 3.10.16 as the currently tested full-stack environment in
+  `CM3070-FP`.
+
+Verification:
+
+- The complete offline suite passes in `CM3070-FP`.
+- Final live-data refresh, trained policy evaluation, and untouched-period
+  evidence remain blocked by Yahoo rate limiting and dataset coverage.
+
 ## 2026-09-27
 
 ### Completed milestone: provenance and disclosure coverage

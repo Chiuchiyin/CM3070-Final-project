@@ -118,6 +118,11 @@ Notebook and app provenance is recorded in [`Code/PROVENANCE.md`](../PROVENANCE.
 The Summary view also displays educational-use, data-date, model-version, and
 dataset-version disclosures for every successful analysis.
 
+The currently tested full-stack environment is Python 3.10.16 in Conda
+environment `CM3070-FP`. The versioned universe correction is recorded in
+`configs/universe.yaml`; `SWH` must be normalized to Yahoo symbol `SHW` before
+dataset preparation.
+
 The training command refuses to create an artifact unless the input covers the
 configured train, validation, and untouched test dates. The currently tracked
 `Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet

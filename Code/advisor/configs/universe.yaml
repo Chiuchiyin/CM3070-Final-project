@@ -1,0 +1,7 @@
+schema_version: 1
+
+name: dow5_mvp_v1
+tickers: [AAPL, MSFT, JPM, JNJ, PG]
+
+ticker_corrections:
+  SWH: SHW

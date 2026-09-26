@@ -6,6 +6,18 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-26
 
+## Status reconciliation (2026-09-27, verification and repository hygiene)
+
+- Confirmed existing tests cover training-only scaling, allocation constraints,
+  risk metrics, explanation fallback, service integration, and Shiny smoke
+  behavior.
+- Added repository ignore rules for notebook checkpoints, model/evaluation
+  artifacts, caches, logs, TensorBoard events, and generated charts.
+- Added `configs/universe.yaml` with the versioned `SWH` to `SHW` correction.
+- Confirmed the full optional stack in `CM3070-FP` uses Python 3.10.16; this is
+  the tested project environment until a Python 3.11 compatibility run is
+  completed.
+
 ## Status reconciliation (2026-09-27, provenance and disclosures)
 
 - Added `Code/PROVENANCE.md` classifying retained notebooks, the original Shiny
@@ -137,8 +149,8 @@ fair baselines, and read a grounded explanation in the unified Shiny UI.
 - [x] Classify each retained notebook as exploration, upstream example, or final evidence.
 - [x] Document original versus adapted FinRL and Qwen code.
 - [x] Move or link legacy notebooks without deleting user work. (`Code/PROVENANCE.md` links the retained material without deleting it.)
-- [ ] Add ignore rules for checkpoints, downloaded models, TensorBoard logs, caches, and generated charts.
-- [ ] Record the known `SWH` to `SHW` ticker correction in a versioned universe file.
+- [x] Add ignore rules for checkpoints, downloaded models, TensorBoard logs, caches, and generated charts.
+- [x] Record the known `SWH` to `SHW` ticker correction in a versioned universe file.
 
 Exit evidence: every retained notebook has a stated purpose and provenance.
 
@@ -149,7 +161,7 @@ Exit evidence: every retained notebook has a stated purpose and provenance.
 - [x] Implement cached Yahoo Finance data loading.
 - [x] Add explicit cache refresh, retry, and Yahoo column-layout handling.
 - [x] Maintain small offline market-data fixtures.
-- [ ] Establish the supported Python version after testing the full optional stack.
+- [x] Establish the tested Python version: Python 3.10.16 in `CM3070-FP`.
 - [x] Add a versioned MVP configuration for five tickers, dates, seeds, costs, paths, and risk profiles.
 - [x] Consolidate runtime and optional-model dependencies into documented install profiles (`requirements.txt` and `requirements-ml.txt`).
 - [x] Merge the existing app dependencies (`shiny`, `shinywidgets`, `plotly`, `faicons`, `yfinance`, and the websocket pin) into the unified install profile.
@@ -226,7 +238,7 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 
 ## Phase 7: Final Evidence And Delivery
 
-- [ ] Add tests for feature construction, scaling, allocation constraints, metrics, and explanation fallback.
+- [x] Add tests for feature construction, scaling, allocation constraints, metrics, and explanation fallback.
 - [x] Add offline service and Shiny smoke tests.
 - [ ] Smoke-test cached and live Yahoo data paths.
 - [ ] Verify all artifact metadata and chronological boundaries programmatically.

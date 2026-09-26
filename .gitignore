@@ -5,3 +5,15 @@
 *.mp4
 *.docx
 /Code/FinRL/results
+# Generated notebooks, model artifacts, caches, logs, and exported charts.
+**/.ipynb_checkpoints/
+**/__pycache__/
+*.py[cod]
+*.log
+*.tfevents.*
+**/artifacts/models/
+**/artifacts/evaluations/
+**/data/cache/
+**/data/processed/
+**/results/
+*.html

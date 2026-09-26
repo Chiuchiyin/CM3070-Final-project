@@ -14,6 +14,17 @@
 > boundary; the available CSV ends in 2021 while the MVP test period ends in
 > 2025.
 
+> **Data updater update — 2026-09-26:** Yahoo cache refresh now supports both
+> yfinance MultiIndex layouts, retries transient failures, validates ticker
+> completeness, and exposes refresh controls through `prepare_data.py`. A live
+> refresh was rate limited in the current environment, so no artifact was
+> replaced.
+
+> **Explanation update — 2026-09-26:** The language layer now has a structured
+> facts contract, a narrow Smolagents tool, optional bounded Qwen generation,
+> numeric-claim validation, and deterministic fallback. Quantitative outputs
+> remain owned by the advisor service.
+
 ## 1. Goal
 
 Turn the current collection of research notebooks and the Shiny stock explorer into one reproducible application that:

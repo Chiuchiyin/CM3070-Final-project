@@ -17,6 +17,23 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=default_mvp_config_path())
     parser.add_argument("--source-csv", type=Path, help="Use a frozen CSV instead of Yahoo Finance")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Redownload Yahoo data even when the matching cache file exists",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=3,
+        help="Number of Yahoo download attempts when refreshing",
+    )
+    parser.add_argument(
+        "--retry-delay",
+        type=float,
+        default=2.0,
+        help="Seconds between Yahoo download retries",
+    )
     parser.add_argument("--output", type=Path, help="Override data.prepared_data_path")
     parser.add_argument("--metadata-output", type=Path, help="Override data.metadata_path")
     return parser.parse_args()
@@ -30,8 +47,15 @@ def main() -> None:
         provider = CsvMarketDataProvider(args.source_csv)
     else:
         source = "yahoo_finance"
-        provider = YahooMarketDataProvider(config.cache_dir)
-    market_data = provider.load(config.tickers, config.start, config.end)
+        provider = YahooMarketDataProvider(
+            config.cache_dir,
+            retries=args.retries,
+            retry_delay_seconds=args.retry_delay,
+        )
+    if args.source_csv:
+        market_data = provider.load(config.tickers, config.start, config.end)
+    else:
+        market_data = provider.load(config.tickers, config.start, config.end, refresh=args.refresh)
     output, metadata_output, metadata = write_prepared_dataset(
         market_data, config, source, args.output, args.metadata_output
     )

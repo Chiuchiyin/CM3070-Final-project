@@ -260,6 +260,53 @@ Next action: prepare a dataset covering every configured chronological split,
 then train and validate the approved artifact before opening the untouched test
 period.
 
+### Completed milestone: dataset updater repair
+
+Status: implementation complete; live refresh rate limited
+
+Delivered:
+
+- Made Yahoo normalization independent of whether yfinance returns ticker-first
+  or field-first MultiIndex columns.
+- Added strict completeness checks for all requested tickers.
+- Added `--refresh`, `--retries`, and `--retry-delay` to `prepare_data.py`.
+- Added retry-aware `DataValidationError` handling so failed downloads cannot
+  overwrite a valid cache or produce incomplete prepared data.
+- Added regression tests for both Yahoo column layouts.
+
+Verification:
+
+- 34 offline tests pass in `CM3070-FP`.
+- A configured refresh was attempted, but Yahoo Finance rate limited all five
+  requested tickers. The updater failed safely without writing an artifact.
+- The available tracked CSV remains insufficient for the 2025 test boundary;
+  a refreshed source covering 2021-01-01 through 2025-06-16 is still required.
+
+### Completed milestone: grounded explanation adapter
+
+Status: implementation complete; model download/configuration remains optional
+
+Delivered:
+
+- Added `ExplanationContext`, a JSON-safe contract containing only validated
+  forecasts, allocations, risk profile, warnings, versions, and backtest facts.
+- Added the narrow `make_smolagents_facts_tool` surface. It returns facts only;
+  it cannot read files or perform calculations.
+- Added `QwenExplainer` with lazy model loading, bounded generation timeout,
+  numeric-claim validation, and deterministic template fallback.
+- Added tests for context construction, grounded numeric claims, unsupported
+  claim fallback, and accepted grounded text.
+
+Verification:
+
+- 38 offline tests pass in `CM3070-FP`.
+- The default service behavior remains deterministic and does not require a
+  downloaded Qwen model.
+
+Next action: configure a local Qwen generator in `CM3070-FP`, smoke-test it
+against the same context, and keep the deterministic fallback as the default
+when model loading or generation fails.
+
 ### Environment update: CM3070-FP
 
 The project verification environment is `CM3070-FP` at

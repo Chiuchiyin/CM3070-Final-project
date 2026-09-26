@@ -6,6 +6,28 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-26
 
+## Status reconciliation (2026-09-26, explanation layer)
+
+- Added `ExplanationContext` as the structured boundary between quantitative
+  service results and language generation.
+- Added a narrow Smolagents facts tool with no file access or calculations.
+- Added bounded `QwenExplainer` support with lazy loading, timeout handling,
+  numeric-claim validation, and deterministic fallback.
+- Added four offline explanation tests; the `CM3070-FP` suite now passes 38
+  tests.
+
+## Status reconciliation (2026-09-26, data updater)
+
+- Fixed Yahoo downloads for both ticker-first and field-first MultiIndex
+  layouts, with explicit requested-ticker completeness validation.
+- Added `--refresh`, retry count, and retry delay controls to `prepare_data.py`.
+- Added retry-aware error messages so rate limits do not silently leave an old
+  or incomplete dataset in place.
+- Added regression coverage; the `CM3070-FP` suite now passes 34 tests.
+- A live refresh was attempted, but Yahoo returned `YFRateLimitError` for all
+  five tickers. No invalid prepared artifact was written. Retry later or use a
+  downloaded source CSV with the same canonical columns.
+
 ## Status reconciliation (2026-09-23)
 
 - Updated the checklist after the unified service and Shiny migration.
@@ -96,6 +118,7 @@ Exit evidence: every retained notebook has a stated purpose and provenance.
 - [x] Keep the unified implementation isolated in `Code/advisor/`.
 - [x] Validate canonical OHLCV data and support frozen CSV data.
 - [x] Implement cached Yahoo Finance data loading.
+- [x] Add explicit cache refresh, retry, and Yahoo column-layout handling.
 - [x] Maintain small offline market-data fixtures.
 - [ ] Establish the supported Python version after testing the full optional stack.
 - [x] Add a versioned MVP configuration for five tickers, dates, seeds, costs, paths, and risk profiles.
@@ -149,9 +172,9 @@ Exit evidence: one service call returns every fact required by the UI without ne
 ## Phase 5: Qwen Explanation Layer
 
 - [x] Add structured explanation context from validated service results.
-- [ ] Add narrow Smolagents tools with no arbitrary file or calculation access.
-- [ ] Add optional Qwen loading, timeout, failure handling, and deterministic template fallback.
-- [ ] Validate generated numeric claims against supplied context.
+- [x] Add narrow Smolagents tools with no arbitrary file or calculation access.
+- [x] Add optional Qwen loading, timeout, failure handling, and deterministic template fallback.
+- [x] Validate generated numeric claims against supplied context.
 - [ ] Display educational-use, uncertainty, data-date, and model-date disclosures.
 
 Exit evidence: the same analysis works with Qwen enabled or disabled and cannot alter quantitative results.

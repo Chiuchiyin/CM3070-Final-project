@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+import time
 
 import pandas as pd
 
@@ -85,42 +86,93 @@ class CsvMarketDataProvider:
         return frame.reset_index(drop=True)
 
 
+def _normalize_yahoo_download(downloaded: pd.DataFrame, ticker_list: list[str]) -> pd.DataFrame:
+    """Convert either Yahoo MultiIndex column layout into canonical rows."""
+    if downloaded.empty:
+        raise DataValidationError("Yahoo Finance returned no data")
+    downloaded = downloaded.copy()
+    if downloaded.index.name is None:
+        downloaded.index.name = "date"
+    if isinstance(downloaded.columns, pd.MultiIndex):
+        rows = []
+        for ticker in ticker_list:
+            levels = [level for level in range(downloaded.columns.nlevels)
+                      if ticker in downloaded.columns.get_level_values(level)]
+            if not levels:
+                continue
+            part = downloaded.xs(ticker, axis=1, level=levels[0], drop_level=True).reset_index()
+            if isinstance(part.columns, pd.MultiIndex):
+                part.columns = [column[-1] if isinstance(column, tuple) else column
+                                for column in part.columns]
+            part["ticker"] = ticker
+            rows.append(part)
+        if not rows:
+            raise DataValidationError("Yahoo Finance returned none of the requested tickers")
+        return pd.concat(rows, ignore_index=True)
+    result = downloaded.reset_index()
+    result["ticker"] = ticker_list[0]
+    return result
+
+
 @dataclass
 class YahooMarketDataProvider:
-    """Download daily data and optionally cache the raw response locally."""
+    """Download daily data and cache a validated canonical response locally."""
 
     cache_dir: Path
+    retries: int = 3
+    retry_delay_seconds: float = 2.0
 
-    def load(self, tickers: Iterable[str], start: str | pd.Timestamp, end: str | pd.Timestamp) -> pd.DataFrame:
+    def load(
+        self,
+        tickers: Iterable[str],
+        start: str | pd.Timestamp,
+        end: str | pd.Timestamp,
+        *,
+        refresh: bool = False,
+    ) -> pd.DataFrame:
         try:
             import yfinance as yf
         except ImportError as exc:
             raise RuntimeError("yfinance is required for live downloads; use the CSV provider offline") from exc
-        ticker_list = [ticker.upper() for ticker in tickers]
+        ticker_list = [str(ticker).upper().strip() for ticker in tickers]
+        if not ticker_list or len(set(ticker_list)) != len(ticker_list):
+            raise DataValidationError("Yahoo ticker list must be non-empty and unique")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         cache_name = f"market_{pd.Timestamp(start):%Y%m%d}_{pd.Timestamp(end):%Y%m%d}_{'-'.join(ticker_list)}.csv"
         cache_path = self.cache_dir / cache_name
-        if cache_path.exists():
+        if cache_path.exists() and not refresh:
             return CsvMarketDataProvider(cache_path).load(ticker_list, start, end)
-        downloaded = yf.download(ticker_list, start=str(pd.Timestamp(start).date()),
-                                 end=str((pd.Timestamp(end) + pd.Timedelta(days=1)).date()),
-                                 auto_adjust=False, group_by="column", progress=False)
-        if downloaded.empty:
-            raise DataValidationError("Yahoo Finance returned no data")
-        if isinstance(downloaded.columns, pd.MultiIndex):
-            rows = []
-            for ticker in ticker_list:
-                if ticker not in downloaded.columns.get_level_values(-1):
-                    continue
-                part = downloaded.xs(ticker, axis=1, level=-1).reset_index()
-                part["ticker"] = ticker
-                rows.append(part)
-            if not rows:
-                raise DataValidationError("Yahoo Finance returned none of the requested tickers")
-            downloaded = pd.concat(rows, ignore_index=True)
-        else:
-            downloaded = downloaded.reset_index()
-            downloaded["ticker"] = ticker_list[0]
+        download_kwargs = {
+            "start": str(pd.Timestamp(start).date()),
+            "end": str((pd.Timestamp(end) + pd.Timedelta(days=1)).date()),
+            "auto_adjust": False,
+            "group_by": "ticker",
+            "progress": False,
+            "threads": False,
+        }
+        downloaded = None
+        last_error = None
+        for attempt in range(max(1, self.retries)):
+            try:
+                downloaded = yf.download(ticker_list, **download_kwargs)
+                if not downloaded.empty:
+                    break
+            except Exception as exc:  # yfinance exposes version-specific exception classes
+                last_error = exc
+            if attempt + 1 < max(1, self.retries):
+                time.sleep(max(0.0, self.retry_delay_seconds) * (attempt + 1))
+        if downloaded is None or downloaded.empty:
+            detail = f": {last_error}" if last_error is not None else ""
+            raise DataValidationError(
+                "Yahoo Finance returned no data after retries. "
+                "Try again later or use a local source CSV" + detail
+            ) from last_error
+        downloaded = _normalize_yahoo_download(downloaded, ticker_list)
         normalized = validate_market_data(downloaded, ticker_list)
+        missing_tickers = set(ticker_list) - set(normalized["ticker"].unique())
+        if missing_tickers:
+            raise DataValidationError(
+                f"Yahoo Finance returned incomplete data; missing: {', '.join(sorted(missing_tickers))}"
+            )
         normalized.to_csv(cache_path, index=False)
         return normalized

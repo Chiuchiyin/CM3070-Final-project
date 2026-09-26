@@ -93,6 +93,23 @@ $env:PYTHONPATH="Code/advisor"
 python Code/advisor/scripts/train_finrl.py --data path/to/mvp_market_data.csv
 ```
 
+Refresh the Yahoo cache and rebuild the prepared artifact with retries:
+
+```powershell
+python Code/advisor/scripts/prepare_data.py --refresh --retries 5 --retry-delay 5
+```
+
+The updater validates all five tickers and handles either Yahoo MultiIndex
+column layout. If Yahoo is rate limited, it exits without replacing the
+prepared artifact; retry later or pass `--source-csv` with a canonical local
+download.
+
+The explanation boundary is implemented in `advisor.explanation`. Use
+`ExplanationContext` for structured facts, `QwenExplainer` for an optional
+lazy generator, and `template_explanation` as the deterministic fallback.
+Generated numeric claims are checked against the supplied context before they
+are displayed.
+
 The training command refuses to create an artifact unless the input covers the
 configured train, validation, and untouched test dates. The currently tracked
 `Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet

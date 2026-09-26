@@ -84,6 +84,20 @@ Install the full modelling stack, including ReservoirPy and FinRL:
 pip install -r requirements-ml.txt
 ```
 
+The project Conda environment is `CM3070-FP`. Use it for the optional-model
+commands and verification:
+
+```powershell
+conda activate CM3070-FP
+$env:PYTHONPATH="Code/advisor"
+python Code/advisor/scripts/train_finrl.py --data path/to/mvp_market_data.csv
+```
+
+The training command refuses to create an artifact unless the input covers the
+configured train, validation, and untouched test dates. The currently tracked
+`Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet
+produce the configured 2025 test artifact.
+
 Use the ReservoirPy backend once installed:
 
 ```powershell

@@ -226,6 +226,40 @@ Status: active
 The baseline vertical slice is now connected end to end; remaining work is
 optional-model validation, resilience coverage, provenance, and final evidence.
 
+## 2026-09-26
+
+### Completed milestone: reproducible A2C training boundary
+
+Status: implementation complete; artifact validation blocked by dataset coverage
+
+Delivered:
+
+- Added `PortfolioAllocationEnv` using Gymnasium and Stable-Baselines3 A2C.
+- Implemented rolling close-return observations with current asset and cash
+  weights, explicit cash logits, stable-softmax target weights, transaction
+  costs, slippage, and net log-return rewards.
+- Added `dataset_sha256` and versioned artifact metadata containing the policy
+  contract, seed, ticker universe, data digest, and train/validation/test
+  boundaries.
+- Added `RollingReturnAndWeightsObservationBuilder` to the saved-policy adapter
+  so inference matches the training observation schema.
+- Added `scripts/train_finrl.py` for reproducible offline training.
+- Added four contract tests covering dataset digest stability, chronological
+  boundary rejection, environment shapes, cash actions, and finite rewards.
+
+Verification:
+
+- `CM3070-FP` contains the optional stack, including ReservoirPy, FinRL,
+  Stable-Baselines3, Smolagents, Transformers, Shiny, and yfinance.
+- 33 offline tests pass in `CM3070-FP`.
+- The trainer safely rejects `Code/data/2025-06-16_dow30.csv` because it ends
+  on 2021-11-30 while the configured test boundary is 2025-06-16. No invalid
+  policy artifact was produced.
+
+Next action: prepare a dataset covering every configured chronological split,
+then train and validate the approved artifact before opening the untouched test
+period.
+
 ### Environment update: CM3070-FP
 
 The project verification environment is `CM3070-FP` at

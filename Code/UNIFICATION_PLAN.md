@@ -7,6 +7,13 @@
 > remaining work is optional-stack evidence: approved FinRL artifacts,
 > Qwen/Smolagents integration, and final untouched-period evaluation.
 
+> **Implementation update — 2026-09-26:** The selected A2C training boundary
+> is implemented with Gymnasium/Stable-Baselines3, versioned metadata, a
+> matching inference observation builder, and a reproducible CLI. Training is
+> intentionally blocked until the input dataset covers the configured test
+> boundary; the available CSV ends in 2021 while the MVP test period ends in
+> 2025.
+
 ## 1. Goal
 
 Turn the current collection of research notebooks and the Shiny stock explorer into one reproducible application that:

@@ -64,6 +64,32 @@ class RollingReturnObservationBuilder:
         return returns.to_numpy(dtype=float).T
 
 
+@dataclass(frozen=True)
+class RollingReturnAndWeightsObservationBuilder:
+    """Observation schema used by the reproducible A2C trainer."""
+
+    lookback: int = 20
+
+    def __post_init__(self):
+        if self.lookback <= 0:
+            raise ValueError("lookback must be positive")
+
+    @property
+    def minimum_history_dates(self) -> int:
+        return self.lookback + 1
+
+    def build(self, history: pd.DataFrame, tickers: list[str], current_weights: pd.Series) -> np.ndarray:
+        close = (history.pivot(index="date", columns="ticker", values="close")
+                 .sort_index().reindex(columns=tickers))
+        if close.isna().any().any():
+            raise ValueError("Observation history must contain every ticker on every date")
+        if len(close) < self.minimum_history_dates:
+            raise ValueError(f"Observation requires {self.minimum_history_dates} dates, got {len(close)}")
+        returns = close.pct_change().iloc[-self.lookback:]
+        weights = current_weights.reindex(tickers + [CASH], fill_value=0.0).to_numpy(dtype=float)
+        return np.concatenate((returns.to_numpy(dtype=float).T.reshape(-1), weights))
+
+
 def stable_softmax(actions: np.ndarray) -> np.ndarray:
     """Convert finite model actions into numerically stable non-negative weights."""
     values = np.asarray(actions, dtype=float).reshape(-1)

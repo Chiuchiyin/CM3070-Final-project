@@ -4,7 +4,7 @@ This is the execution checklist for [the unification plan](../UNIFICATION_PLAN.m
 It keeps new work inside `Code/advisor/` until the MVP is demonstrably complete.
 An item is complete only when its stated verification evidence exists.
 
-Last updated: 2026-09-23
+Last updated: 2026-09-26
 
 ## Status reconciliation (2026-09-23)
 
@@ -12,6 +12,19 @@ Last updated: 2026-09-23
 - The cached baseline workflow is implemented and verified by 30 offline tests.
 - The remaining work is now concentrated in provenance, optional-model
   artifacts, resilient UI error states, and final evaluation evidence.
+
+## Status reconciliation (2026-09-26)
+
+- Added the reproducible A2C training environment, artifact metadata writer,
+  matching observation builder, and `scripts/train_finrl.py`.
+- Added contract tests for stable dataset digests, cash actions, finite
+  environment steps, and chronological data-boundary rejection.
+- Verification now passes 33 offline tests in the `CM3070-FP` Conda
+  environment.
+- The configured artifact run is blocked by the available source dataset:
+  `Code/data/2025-06-16_dow30.csv` ends on 2021-11-30, before the configured
+  2025-06-16 test boundary. The trainer rejects this safely and does not create
+  an invalid artifact.
 
 ## Change log (2026-09-23)
 
@@ -40,7 +53,9 @@ Last updated: 2026-09-23
 - Data validation, Yahoo/cache loading, MVP configuration, and reproducible preparation are implemented.
 - NumPy ESN, optional ReservoirPy ESN, moving-average, and last-close forecasters are available.
 - Equal-weight, buy-and-hold, and forecast-ranked strategies are available; chronological backtesting includes costs and risk metrics.
-- The FinRL A2C portfolio path is selected and specified; a trained artifact and live optional-stack run remain pending.
+- The FinRL A2C portfolio path is selected and specified; the trainer and
+  artifact contract are implemented, but a trained artifact remains pending
+  until a dataset covers all configured splits.
 - The Python Shiny app now uses `AdvisorService` and exposes summary, portfolio, forecast, and evaluation views; the cached fixture path is offline-capable.
 - Qwen/Smolagents, approved FinRL artifacts, and final untouched-period evidence remain pending.
 - Preserve the current uncommitted strategy and test changes while continuing.
@@ -114,9 +129,10 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Add a forecast-ranked baseline strategy with deterministic ranking, cash threshold, and warm-up behavior.
 - [x] Select the A2C portfolio-allocation path from the FinRL notebooks; retire other tutorial variants from the production path.
 - [x] Define and version its observation space, action space, reward, cash handling, and rebalance schedule.
-- [ ] Add a reproducible FinRL training command that saves an approved policy artifact.
+- [x] Add a reproducible FinRL training command that saves an approved policy artifact.
 - [ ] Backtest FinRL, equal-weight, buy-and-hold, and a market-index benchmark over identical unseen dates.
-- [ ] Validate live ReservoirPy and FinRL paths after installing `requirements-ml.txt`.
+- [x] Validate optional package availability in the `CM3070-FP` environment.
+- [ ] Validate live ReservoirPy forecasting and FinRL inference on project data.
 
 Exit evidence: a saved FinRL artifact produces valid allocations and a repeatable fair comparison on an untouched period.
 
@@ -170,11 +186,13 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
 
 ## Current Next Item
 
-1. Run the selected FinRL A2C path in the optional modelling environment and
-   save an approved policy artifact.
-2. Validate the policy on the configured validation period before opening the
+1. Obtain or prepare a canonical five-ticker dataset covering the configured
+   2021-01-01 to 2025-06-16 interval.
+2. Run `scripts/train_finrl.py` in `CM3070-FP` and save the approved A2C
+   artifact plus metadata.
+3. Validate the policy on the configured validation period before opening the
    untouched test period.
-3. Add explicit Shiny error-state handling and smoke tests for cached and live
+4. Add explicit Shiny error-state handling and smoke tests for cached and live
    data paths.
 
 The unified baseline workflow is available offline through the Shiny

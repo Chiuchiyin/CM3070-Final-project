@@ -8,7 +8,7 @@ class ShinySmokeTests(unittest.TestCase):
     def test_unified_app_compiles_and_contains_required_views(self):
         py_compile.compile(str(APP), doraise=True)
         source = APP.read_text(encoding='utf-8')
-        for marker in ('AdvisorService', 'analysis_state', 'Summary', 'Portfolio', 'Forecast', 'Evaluation', 'Analysis unavailable'):
+        for marker in ('AdvisorService', 'analysis_state', 'Summary', 'Portfolio', 'Forecast', 'Evaluation', 'Analysis unavailable', 'disclosures', 'Model version'):
             self.assertIn(marker, source)
 
     def test_app_uses_the_advisor_service_boundary(self):

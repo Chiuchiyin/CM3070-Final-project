@@ -356,3 +356,25 @@ includes FinRL 0.3.8, ReservoirPy 0.3.13.post1, Stable-Baselines3 2.6.1a1,
 Smolagents 1.16.1, Transformers 4.52.3, Shiny 1.4.0, and yfinance 0.2.61.
 Future training, evaluation, and app smoke-test commands should use this
 environment rather than the base interpreter.
+
+## 2026-09-27
+
+### Completed milestone: provenance and disclosure coverage
+
+Status: complete for documentation and offline UI evidence
+
+Delivered:
+
+- Added `Code/PROVENANCE.md` with classifications for all retained notebooks,
+  checkpoint files, the original Shiny apps, and adapted FinRL/Qwen sources.
+- Documented original implementation versus upstream/adapted ideas and the
+  evidence rules for final report claims.
+- Added a Shiny Summary disclosures table showing educational-use status, data
+  date, model version, dataset version, and risk profile.
+- Extended the Shiny smoke test to require the disclosure view.
+
+Verification:
+
+- The provenance inventory is tracked and linked from the unification work.
+- Offline service, explanation, policy, data, and Shiny tests remain the next
+  verification gate after this change.

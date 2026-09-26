@@ -114,6 +114,10 @@ The Shiny app wraps each analysis request in a recoverable state. Empty ticker
 selection, unavailable data, model failures, and partial backtest results are
 shown in the relevant view instead of terminating the application.
 
+Notebook and app provenance is recorded in [`Code/PROVENANCE.md`](../PROVENANCE.md).
+The Summary view also displays educational-use, data-date, model-version, and
+dataset-version disclosures for every successful analysis.
+
 The training command refuses to create an artifact unless the input covers the
 configured train, validation, and untouched test dates. The currently tracked
 `Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet

@@ -95,6 +95,21 @@ with ui.navset_tab():
             return result.explanation
         @render.data_frame
         def warnings(): return status_frame()
+        @render.data_frame
+        def disclosures():
+            result = current_result()
+            if result is None:
+                return empty_frame("Model and data disclosures will appear after analysis.")
+            return pd.DataFrame({
+                "Field": ["Use", "Data date", "Model version", "Dataset version", "Risk profile"],
+                "Value": [
+                    "Educational decision support; simulated allocations only",
+                    str(result.as_of_date.date()) if result.as_of_date is not None else "Unavailable",
+                    result.model_version,
+                    result.dataset_version,
+                    result.risk_profile,
+                ],
+            })
     with ui.nav_panel("Portfolio"):
         @render.data_frame
         def allocations():

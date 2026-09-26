@@ -30,6 +30,11 @@
 > unavailable backtests through recoverable status states. Offline smoke tests
 > verify the app compiles and remains connected to `AdvisorService`.
 
+> **Provenance update — 2026-09-27:** Retained notebooks and source apps are
+> classified in `Code/PROVENANCE.md`, and the Shiny Summary view now displays
+> educational-use, data-date, model-version, dataset-version, and risk-profile
+> disclosures.
+
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are

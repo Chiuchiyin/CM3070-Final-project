@@ -6,6 +6,16 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-26
 
+## Status reconciliation (2026-09-27, provenance and disclosures)
+
+- Added `Code/PROVENANCE.md` classifying retained notebooks, the original Shiny
+  app, upstream examples, adapted production contracts, and generated
+  checkpoints.
+- Added explicit Summary disclosures for educational use, data date, model
+  version, dataset version, and risk profile.
+- Added smoke coverage for the disclosure view; the next verified suite will
+  include this UI contract.
+
 ## Status reconciliation (2026-09-26, approved artifact loading)
 
 - Added inference-only FinRL artifact loading with metadata validation for
@@ -124,9 +134,9 @@ fair baselines, and read a grounded explanation in the unified Shiny UI.
 
 ## Phase 0: Provenance And Repository Hygiene
 
-- [ ] Classify each retained notebook as exploration, upstream example, or final evidence.
-- [ ] Document original versus adapted FinRL and Qwen code.
-- [ ] Move or link legacy notebooks without deleting user work.
+- [x] Classify each retained notebook as exploration, upstream example, or final evidence.
+- [x] Document original versus adapted FinRL and Qwen code.
+- [x] Move or link legacy notebooks without deleting user work. (`Code/PROVENANCE.md` links the retained material without deleting it.)
 - [ ] Add ignore rules for checkpoints, downloaded models, TensorBoard logs, caches, and generated charts.
 - [ ] Record the known `SWH` to `SHW` ticker correction in a versioned universe file.
 
@@ -194,7 +204,7 @@ Exit evidence: one service call returns every fact required by the UI without ne
 - [x] Add narrow Smolagents tools with no arbitrary file or calculation access.
 - [x] Add optional Qwen loading, timeout, failure handling, and deterministic template fallback.
 - [x] Validate generated numeric claims against supplied context.
-- [ ] Display educational-use, uncertainty, data-date, and model-date disclosures.
+- [x] Display educational-use, uncertainty, data-date, and model-date disclosures.
 
 Exit evidence: the same analysis works with Qwen enabled or disabled and cannot alter quantitative results.
 

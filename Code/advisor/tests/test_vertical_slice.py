@@ -7,6 +7,7 @@ from advisor.data import (
     CsvMarketDataProvider,
     DataValidationError,
     _normalize_yahoo_download,
+    canonical_ticker,
     validate_market_data,
 )
 from advisor.forecasting import ESNConfig, ESNForecaster
@@ -27,6 +28,15 @@ class VerticalSliceTests(unittest.TestCase):
                               "high": [1], "low": [1], "close": [1], "volume": [1]})
         with self.assertRaises(DataValidationError):
             validate_market_data(frame)
+
+    def test_known_notebook_ticker_correction_is_applied(self):
+        frame = pd.DataFrame({
+            "date": ["2025-01-01"], "ticker": ["SWH"], "open": [100],
+            "high": [101], "low": [99], "close": [100], "volume": [1000],
+        })
+        normalized = validate_market_data(frame, ["SWH"])
+        self.assertEqual(canonical_ticker("SWH"), "SHW")
+        self.assertEqual(normalized["ticker"].tolist(), ["SHW"])
 
     def test_yahoo_multiindex_layouts_are_normalized(self):
         dates = pd.date_range("2025-01-01", periods=2)

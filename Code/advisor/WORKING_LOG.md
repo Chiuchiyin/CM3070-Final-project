@@ -357,6 +357,21 @@ Smolagents 1.16.1, Transformers 4.52.3, Shiny 1.4.0, and yfinance 0.2.61.
 Future training, evaluation, and app smoke-test commands should use this
 environment rather than the base interpreter.
 
+### Completed milestone: applied universe correction
+
+Status: complete
+
+Delivered:
+
+- Added `canonical_ticker` to the data layer and applied the versioned
+  `SWH` to `SHW` correction before filtering, caching, and Yahoo requests.
+- Added a regression test for notebook-style `SWH` input.
+
+Verification:
+
+- 44 tests pass in `CM3070-FP`.
+- The universe correction is now executable behavior, not documentation only.
+
 ### Completed milestone: verification and repository hygiene
 
 Status: complete for offline evidence

@@ -10,6 +10,13 @@ import time
 import pandas as pd
 
 REQUIRED_COLUMNS = ("date", "ticker", "open", "high", "low", "close", "volume")
+TICKER_CORRECTIONS = {"SWH": "SHW"}
+
+
+def canonical_ticker(ticker: str) -> str:
+    """Return the Yahoo/canonical symbol for a user or notebook symbol."""
+    symbol = str(ticker).upper().strip()
+    return TICKER_CORRECTIONS.get(symbol, symbol)
 
 
 class DataValidationError(ValueError):
@@ -43,6 +50,7 @@ def validate_market_data(frame: pd.DataFrame, tickers: Iterable[str] | None = No
         raise DataValidationError("Market data contains invalid dates")
     if result["ticker"].isna().any() or (result["ticker"].astype(str).str.strip() == "").any():
         raise DataValidationError("Market data contains an empty ticker")
+    result["ticker"] = result["ticker"].map(canonical_ticker)
     key = result["ticker"].astype(str) + "|" + result["date"].astype(str)
     if key.duplicated().any():
         raise DataValidationError("Market data contains duplicate ticker/date rows")
@@ -55,9 +63,8 @@ def validate_market_data(frame: pd.DataFrame, tickers: Iterable[str] | None = No
         raise DataValidationError("High price is below another OHLC value")
     if (result["low"] > result[["open", "close", "high"]].min(axis=1)).any():
         raise DataValidationError("Low price is above another OHLC value")
-    result["ticker"] = result["ticker"].astype(str).str.upper().str.strip()
     if tickers is not None:
-        requested = {ticker.upper() for ticker in tickers}
+        requested = {canonical_ticker(ticker) for ticker in tickers}
         result = result[result["ticker"].isin(requested)]
         if result.empty:
             raise DataValidationError("None of the requested tickers are present")
@@ -134,7 +141,7 @@ class YahooMarketDataProvider:
             import yfinance as yf
         except ImportError as exc:
             raise RuntimeError("yfinance is required for live downloads; use the CSV provider offline") from exc
-        ticker_list = [str(ticker).upper().strip() for ticker in tickers]
+        ticker_list = [canonical_ticker(ticker) for ticker in tickers]
         if not ticker_list or len(set(ticker_list)) != len(ticker_list):
             raise DataValidationError("Yahoo ticker list must be non-empty and unique")
         self.cache_dir.mkdir(parents=True, exist_ok=True)

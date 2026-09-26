@@ -40,6 +40,10 @@
 > explanation fallback, service integration, and Shiny smoke checks. Repository
 > ignore rules and the versioned `SWH` to `SHW` correction are in place.
 
+> The `SWH` to `SHW` correction is enforced by `advisor.data.canonical_ticker`
+> during filtering, caching, and Yahoo requests; it is covered by an offline
+> regression test.
+
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are

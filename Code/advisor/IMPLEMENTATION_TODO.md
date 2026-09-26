@@ -4,7 +4,15 @@ This is the execution checklist for [the unification plan](../UNIFICATION_PLAN.m
 It keeps new work inside `Code/advisor/` until the MVP is demonstrably complete.
 An item is complete only when its stated verification evidence exists.
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
+
+## Status reconciliation (2026-09-27, ticker correction and verification)
+
+- Wired the versioned `SWH` to `SHW` correction into canonical data
+  normalization and Yahoo requests.
+- Added a regression test proving notebook-style `SWH` input becomes canonical
+  `SHW` output.
+- Verification now passes 44 tests in `CM3070-FP`.
 
 ## Status reconciliation (2026-09-27, verification and repository hygiene)
 

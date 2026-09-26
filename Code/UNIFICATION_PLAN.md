@@ -25,6 +25,16 @@
 > numeric-claim validation, and deterministic fallback. Quantitative outputs
 > remain owned by the advisor service.
 
+> **Shiny resilience update — 2026-09-26:** The unified app now handles empty
+> selections, unavailable data, model failures, stale/partial results, and
+> unavailable backtests through recoverable status states. Offline smoke tests
+> verify the app compiles and remains connected to `AdvisorService`.
+
+> **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
+> an inference-only loader that validates metadata before use. The UI cannot
+> trigger training, and mismatched universes or observation schemas are
+> rejected.
+
 ## 1. Goal
 
 Turn the current collection of research notebooks and the Shiny stock explorer into one reproducible application that:

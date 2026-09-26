@@ -6,6 +6,25 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-26
 
+## Status reconciliation (2026-09-26, approved artifact loading)
+
+- Added inference-only FinRL artifact loading with metadata validation for
+  ticker universe, algorithm, observation schema, and lookback.
+- The loader never trains or mutates a policy and can be injected with a fake
+  model loader for offline tests.
+- Added three artifact-loading contract tests; the `CM3070-FP` suite now
+  passes 43 tests.
+
+## Status reconciliation (2026-09-26, Shiny resilience)
+
+- Added a recoverable analysis state to the unified app for empty selections,
+  unavailable data, model errors, and partial results.
+- Added explicit unavailable/empty messages for summary, portfolio, forecast,
+  and evaluation views.
+- Added offline Shiny smoke tests for compilation, required views, and the
+  `AdvisorService` boundary.
+- Verification now passes 40 tests in `CM3070-FP`.
+
 ## Status reconciliation (2026-09-26, explanation layer)
 
 - Added `ExplanationContext` as the structured boundary between quantitative
@@ -164,7 +183,7 @@ Exit evidence: a saved FinRL artifact produces valid allocations and a repeatabl
 - [x] Provide a dependency-light `AdvisorService` for forecasts, allocations, and template explanations.
 - [x] Extend `AnalysisResult` with data freshness, warnings, model/dataset versions, allocation changes, backtest results, and risk-profile constraints.
 - [x] Accept `as_of_date` and `risk_profile` in the service contract.
-- [ ] Load approved model artifacts for inference only; prevent UI-triggered retraining.
+- [x] Load approved model artifacts for inference only; prevent UI-triggered retraining.
 - [x] Add an offline end-to-end service integration test using the frozen market-data fixture.
 
 Exit evidence: one service call returns every fact required by the UI without network or LLM access.
@@ -189,7 +208,7 @@ Exit evidence: the same analysis works with Qwen enabled or disabled and cannot 
 - [x] Add forecast view for price history, prediction, and baseline comparison.
 - [x] Add evaluation view for cumulative return, drawdown, and metric comparison.
 - [x] Add explanation view with assumptions, limitations, and unavailable-model state.
-- [ ] Handle empty data, short ranges, stale cache, loading, partial result, and model-unavailable states.
+- [x] Handle empty data, short ranges, stale cache, loading, partial result, and model-unavailable states.
 - [x] Use the final row for latest data and label it `Latest close` unless a real-time feed exists.
 - [ ] Retire the duplicate core app only after feature parity and smoke-test coverage.
 
@@ -198,7 +217,7 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 ## Phase 7: Final Evidence And Delivery
 
 - [ ] Add tests for feature construction, scaling, allocation constraints, metrics, and explanation fallback.
-- [ ] Add offline service and Shiny smoke tests.
+- [x] Add offline service and Shiny smoke tests.
 - [ ] Smoke-test cached and live Yahoo data paths.
 - [ ] Verify all artifact metadata and chronological boundaries programmatically.
 - [ ] Run the final untouched-period evaluation and save generated tables/charts.

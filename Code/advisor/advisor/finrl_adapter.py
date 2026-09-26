@@ -8,6 +8,7 @@ must provide that schema as an observation builder.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 from typing import Protocol
 
@@ -181,3 +182,62 @@ class FinRLPolicyAdapter:
                 allocation, index=self.tickers + [CASH], dtype=float
             )
         return pd.Series(allocation, index=self.tickers, dtype=float)
+
+
+
+def load_approved_finrl_policy(
+    model_path: Path | str,
+    metadata_path: Path | str,
+    *,
+    tickers: list[str],
+    algorithm: str = "A2C",
+    observation_builder: ObservationBuilder | None = None,
+    expected_schema: str = "rolling_returns_and_weights_v1",
+    model_loader=None,
+) -> tuple[FinRLPolicyAdapter, dict]:
+    """Load an approved policy for inference after validating its metadata.
+
+    This function only loads an existing artifact. It never trains or mutates
+    the model. Metadata checks prevent a policy trained for another universe or
+    observation schema from entering the application path.
+    """
+    model_path = Path(model_path)
+    metadata_path = Path(metadata_path)
+    if not model_path.exists():
+        raise FileNotFoundError(f"Approved policy artifact not found: {model_path}")
+    if not metadata_path.exists():
+        raise FileNotFoundError(f"Policy metadata not found: {metadata_path}")
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid policy metadata JSON: {metadata_path}") from exc
+    canonical_tickers = sorted(str(t).upper().strip() for t in tickers)
+    stored_tickers = sorted(str(t).upper().strip() for t in metadata.get("tickers", []))
+    if stored_tickers != canonical_tickers:
+        raise ValueError(
+            f"Policy metadata tickers {stored_tickers} do not match requested {canonical_tickers}"
+        )
+    if str(metadata.get("algorithm", "")).upper() != algorithm.upper():
+        raise ValueError("Policy algorithm does not match the requested algorithm")
+    if metadata.get("observation_schema") != expected_schema:
+        raise ValueError("Policy observation schema is not approved for this application")
+    lookback = int(metadata.get("lookback", 0))
+    if lookback <= 0:
+        raise ValueError("Policy metadata must contain a positive lookback")
+    if observation_builder is None:
+        observation_builder = RollingReturnAndWeightsObservationBuilder(lookback=lookback)
+    if getattr(observation_builder, "lookback", lookback) != lookback:
+        raise ValueError("Observation builder lookback does not match policy metadata")
+    if model_loader is None:
+        adapter = FinRLPolicyAdapter.from_stable_baselines3(
+            model_path, algorithm, observation_builder, canonical_tickers,
+            include_cash_action=bool(metadata.get("include_cash", True)),
+        )
+    else:
+        model = model_loader(model_path, algorithm)
+        adapter = FinRLPolicyAdapter(
+            model, observation_builder, canonical_tickers,
+            include_cash_action=bool(metadata.get("include_cash", True)),
+            name=f"finrl_{algorithm.lower()}",
+        )
+    return adapter, metadata

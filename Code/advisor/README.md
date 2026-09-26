@@ -110,10 +110,18 @@ lazy generator, and `template_explanation` as the deterministic fallback.
 Generated numeric claims are checked against the supplied context before they
 are displayed.
 
+The Shiny app wraps each analysis request in a recoverable state. Empty ticker
+selection, unavailable data, model failures, and partial backtest results are
+shown in the relevant view instead of terminating the application.
+
 The training command refuses to create an artifact unless the input covers the
 configured train, validation, and untouched test dates. The currently tracked
 `Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet
 produce the configured 2025 test artifact.
+
+Approved policies are loaded for inference with
+`advisor.finrl_adapter.load_approved_finrl_policy`. The loader validates the
+artifact metadata before use and does not expose training through the app.
 
 Use the ReservoirPy backend once installed:
 

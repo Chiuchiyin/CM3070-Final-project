@@ -36,45 +36,81 @@ with ui.sidebar():
 
 @reactive.calc
 @reactive.event(input.analyse)
-def analysis():
-    value = input.as_of()
-    return service.analyse(tickers=input.tickers(), as_of_date=value if value else None, risk_profile=input.risk_profile())
+def analysis_state():
+    try:
+        if not input.tickers():
+            return {"result": None, "error": "Select at least one ticker."}
+        value = input.as_of()
+        result = service.analyse(tickers=input.tickers(), as_of_date=value if value else None, risk_profile=input.risk_profile())
+        return {"result": result, "error": None}
+    except Exception as exc:
+        return {"result": None, "error": str(exc)}
+
+def current_result():
+    state = analysis_state()
+    if state["result"] is None:
+        return None
+    return state["result"]
+
+def status_frame():
+    state = analysis_state()
+    if state["error"]:
+        return pd.DataFrame({"Status": [f"Analysis unavailable: {state['error']}"]})
+    result = state["result"]
+    rows = result.warnings or ["Analysis ready. No data-quality warnings."]
+    return pd.DataFrame({"Status": rows})
+
+def empty_frame(message):
+    return pd.DataFrame({"Status": [message]})
 
 with ui.layout_column_wrap(fill=False):
     with ui.value_box():
         "Latest close"
         @render.text
         def latest_close():
-            result = analysis()
+            result = current_result()
+            if result is None: return "Unavailable"
             return str(result.market_data.sort_values("date")["date"].iloc[-1].date())
     with ui.value_box():
         "Expected return"
         @render.text
         def expected_return():
-            return f"{analysis().forecasts['predicted_return'].mean():+.2%}"
+            result = current_result()
+            if result is None: return "Unavailable"
+            return f"{result.forecasts['predicted_return'].mean():+.2%}"
     with ui.value_box():
         "Cash allocation"
         @render.text
         def cash_allocation():
-            return f"{analysis().allocations['cash_weight'].iloc[0]:.1%}"
+            result = current_result()
+            if result is None: return "Unavailable"
+            return f"{result.allocations['cash_weight'].iloc[0]:.1%}"
 
 with ui.navset_tab():
     with ui.nav_panel("Summary"):
         @render.text
-        def explanation(): return analysis().explanation
+        def explanation():
+            result = current_result()
+            if result is None: return analysis_state()["error"] or "Press Analyse to begin."
+            return result.explanation
         @render.data_frame
-        def warnings():
-            rows = analysis().warnings or ["No data-quality warnings."]
-            return pd.DataFrame({"Status": rows})
+        def warnings(): return status_frame()
     with ui.nav_panel("Portfolio"):
         @render.data_frame
-        def allocations(): return analysis().allocations
+        def allocations():
+            result = current_result()
+            return result.allocations if result is not None else empty_frame("Run an analysis to view allocations.")
         @render.data_frame
-        def allocation_changes(): return analysis().allocation_changes
+        def allocation_changes():
+            result = current_result()
+            return result.allocation_changes if result is not None else empty_frame("Run an analysis to view allocation changes.")
     with ui.nav_panel("Forecast"):
         @render_plotly
         def forecast_chart():
-            result = analysis(); frame = result.market_data.sort_values("date"); fig = go.Figure()
+            result = current_result()
+            if result is None:
+                return go.Figure().update_layout(title="Forecast unavailable until analysis succeeds")
+            frame = result.market_data.sort_values("date"); fig = go.Figure()
             for ticker, group in frame.groupby("ticker"):
                 fig.add_scatter(x=group["date"], y=group["close"], mode="lines", name=f"{ticker} close")
                 forecast = result.forecasts[result.forecasts["ticker"] == ticker].iloc[0]
@@ -82,11 +118,15 @@ with ui.navset_tab():
             fig.update_layout(hovermode="x unified", yaxis_title="Close", template="plotly_white")
             return fig
         @render.data_frame
-        def forecast_table(): return analysis().forecasts
+        def forecast_table():
+            result = current_result()
+            return result.forecasts if result is not None else empty_frame("Run an analysis to view forecasts.")
     with ui.nav_panel("Evaluation"):
         @render.data_frame
         def evaluation_metrics():
-            result = analysis(); rows = [{"strategy": n, **m} for n, m in result.backtest_metrics.items()]
-            return pd.DataFrame(rows) if rows else pd.DataFrame({"status": ["Backtest unavailable"]})
+            result = current_result()
+            if result is None: return empty_frame("Run an analysis to view evaluation metrics.")
+            rows = [{"strategy": n, **m} for n, m in result.backtest_metrics.items()]
+            return pd.DataFrame(rows) if rows else empty_frame("Backtest unavailable for this range.")
 
 ui.include_css(Path(__file__).parent / "styles.css")

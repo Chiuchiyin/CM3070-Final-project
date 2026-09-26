@@ -307,6 +307,46 @@ Next action: configure a local Qwen generator in `CM3070-FP`, smoke-test it
 against the same context, and keep the deterministic fallback as the default
 when model loading or generation fails.
 
+### Completed milestone: resilient unified Shiny states
+
+Status: complete for offline smoke coverage
+
+Delivered:
+
+- Added a single recoverable `analysis_state` boundary around service calls.
+- Empty ticker selections and service/data/model failures now produce status
+  text rather than crashing reactive render functions.
+- Summary, Portfolio, Forecast, and Evaluation views now show explicit
+  unavailable or partial-result messages when analysis has not succeeded.
+- Added offline smoke tests for app compilation, required views, and the
+  AdvisorService integration boundary.
+
+Verification:
+
+- 40 tests pass in `CM3070-FP`.
+- The Shiny script compiles successfully.
+- Live Yahoo and untouched-period evaluation remain pending because Yahoo is
+  currently rate limited and the tracked dataset ends in 2021.
+
+### Completed milestone: inference-only approved policy loading
+
+Status: complete for artifact contract; real artifact pending dataset refresh
+
+Delivered:
+
+- Added `load_approved_finrl_policy` to validate policy metadata before loading.
+- Checks include ticker universe, A2C algorithm, approved observation schema,
+  cash-action setting, and lookback compatibility.
+- Loading is inference-only: no training code is reachable from this boundary.
+- Added offline fake-loader tests for valid metadata and rejection of universe,
+  schema, and lookback mismatches.
+
+Verification:
+
+- 43 tests pass in `CM3070-FP`.
+- The real artifact remains pending until the refreshed dataset covers the
+  configured 2025 test period.
+
 ### Environment update: CM3070-FP
 
 The project verification environment is `CM3070-FP` at

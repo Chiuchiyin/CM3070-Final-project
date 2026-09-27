@@ -140,6 +140,13 @@ python scripts/evaluate_forecaster.py ../data/2025-06-16_dow30.csv --tickers AAP
 
 Write the predictions and metrics to an artifact directory by adding `--output-dir artifacts/evaluation`.
 
+Run multiple deterministic seeds and save a provenance bundle containing
+predictions, per-seed metrics, mean/standard-deviation summaries, and metadata:
+
+```powershell
+python scripts/evaluate_forecaster.py ../data/2025-06-16_dow30.csv --tickers AAPL MSFT --min-train-size 25 --max-steps 100 --seeds 42 43 44 --output-dir artifacts/evaluation
+```
+
 Run both portfolio baselines and write returns, weights, and metrics:
 
 ```powershell
@@ -149,6 +156,21 @@ python scripts/backtest_portfolios.py ../data/2025-06-16_dow30.csv --tickers AAP
 The default simulation charges 10 basis points of transaction costs and 5 basis
 points of slippage. Use `--transaction-cost-bps`, `--slippage-bps`, and
 `--rebalance-every` to make these assumptions explicit for an experiment.
+
+Add a canonical one-ticker market-index file for a fair index comparison:
+
+```powershell
+python scripts/backtest_portfolios.py path/to/mvp_market_data.csv --tickers AAPL MSFT JPM JNJ PG --index-csv path/to/index.csv
+```
+
+The comparison command uses identical overlapping dates and costs for every
+baseline. Without `--index-csv`, it records that the index benchmark is
+unavailable rather than substituting an invented series.
+
+The NumPy and ReservoirPy forecast commands have been smoke-tested in
+`CM3070-FP` against the frozen fixture. Their generated evaluation bundles are
+written under `artifacts/evaluation/` and include seed dispersion and data
+provenance; they are not substitutes for the final untouched-period run.
 
 ## Saved FinRL policies
 

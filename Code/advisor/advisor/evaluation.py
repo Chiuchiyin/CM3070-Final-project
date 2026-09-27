@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import asdict, replace
+import hashlib
+import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -124,3 +128,96 @@ def compare_reservoirpy_with_baseline(
         })
     metrics = pd.concat([per_ticker, pd.DataFrame(aggregate_rows)], ignore_index=True)
     return predictions, metrics.sort_values(["ticker", "model_name"]).reset_index(drop=True)
+
+
+def evaluate_seeds(
+    market_data: pd.DataFrame,
+    config: ESNConfig,
+    seeds: list[int],
+    *,
+    backend: str = "numpy",
+    min_train_size: int = 100,
+    max_steps: int | None = 100,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Walk forward over identical targets for each seed and report dispersion."""
+    if not seeds or len(set(seeds)) != len(seeds):
+        raise ValueError("seeds must be a non-empty list of unique integers")
+    compare = {
+        "numpy": compare_esn_with_baseline,
+        "reservoirpy": compare_reservoirpy_with_baseline,
+    }.get(backend)
+    if compare is None:
+        raise ValueError("backend must be numpy or reservoirpy")
+    prediction_parts = []
+    metric_parts = []
+    expected_targets = None
+    for seed in seeds:
+        predictions, metrics = compare(
+            market_data, replace(config, seed=int(seed)), min_train_size, max_steps
+        )
+        targets = predictions[["ticker", "date", "model_name"]].sort_values(
+            ["ticker", "date", "model_name"]
+        ).reset_index(drop=True)
+        if expected_targets is None:
+            expected_targets = targets
+        elif not targets.equals(expected_targets):
+            raise ValueError("Seeds were evaluated on different target dates")
+        prediction_parts.append(predictions.assign(seed=int(seed)))
+        metric_parts.append(metrics.assign(seed=int(seed)))
+    all_predictions = pd.concat(prediction_parts, ignore_index=True)
+    all_metrics = pd.concat(metric_parts, ignore_index=True)
+    metric_names = ["mae", "rmse", "mape", "r2", "directional_accuracy"]
+    summary = all_metrics.groupby(["model_name", "ticker"], as_index=False)[metric_names].agg(
+        ["mean", "std"]
+    )
+    summary.columns = [
+        "_".join(part for part in column if part) if isinstance(column, tuple) else column
+        for column in summary.columns
+    ]
+    summary = summary.rename(columns={"model_name_": "model_name", "ticker_": "ticker"})
+    summary = summary.fillna({f"{name}_std": 0.0 for name in metric_names})
+    return all_predictions, all_metrics, summary
+
+
+def write_forecast_evaluation(
+    output_dir: str | Path,
+    market_data: pd.DataFrame,
+    config: ESNConfig,
+    seeds: list[int],
+    predictions: pd.DataFrame,
+    metrics: pd.DataFrame,
+    summary: pd.DataFrame,
+    *,
+    backend: str,
+    min_train_size: int,
+    max_steps: int | None,
+) -> Path:
+    """Write deterministic evaluation tables and provenance metadata."""
+    directory = Path(output_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    predictions.to_csv(directory / "forecast_predictions.csv", index=False)
+    metrics.to_csv(directory / "forecast_metrics.csv", index=False)
+    summary.to_csv(directory / "forecast_seed_summary.csv", index=False)
+    canonical = market_data.sort_values(["date", "ticker"]).to_csv(
+        index=False, lineterminator="\n"
+    )
+    metadata = {
+        "artifact_schema_version": 1,
+        "backend": backend,
+        "model_name": "numpy_esn" if backend == "numpy" else "reservoirpy_esn",
+        "model_version": "numpy_esn_v1" if backend == "numpy" else "reservoirpy_esn_v1",
+        "configuration": asdict(config),
+        "seeds": [int(seed) for seed in seeds],
+        "min_train_size": int(min_train_size),
+        "max_steps": max_steps,
+        "data_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "data_start": str(pd.Timestamp(market_data["date"].min()).date()),
+        "data_end": str(pd.Timestamp(market_data["date"].max()).date()),
+        "evaluation_start": str(pd.Timestamp(predictions["date"].min()).date()),
+        "evaluation_end": str(pd.Timestamp(predictions["date"].max()).date()),
+        "tickers": sorted(market_data["ticker"].unique().tolist()),
+        "metrics": summary.to_dict(orient="records"),
+    }
+    path = directory / "forecast_evaluation.metadata.json"
+    path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path

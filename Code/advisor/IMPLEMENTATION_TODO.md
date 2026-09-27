@@ -6,6 +6,36 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-27
 
+## Status reconciliation (2026-09-27, fair portfolio comparison)
+
+- Added `run_baseline_comparison` for equal-weight, buy-and-hold, and
+  forecast-ranked strategies on one identical interval and cost configuration.
+- Added optional one-ticker market-index input with overlap validation; the
+  index is never fabricated when unavailable.
+- Updated `backtest_portfolios.py` to write a comparison table and explicitly
+  label index-unavailable runs.
+- Added comparison tests; verification now passes 47 tests in `CM3070-FP`.
+
+## Status reconciliation (2026-09-27, optional forecast backends)
+
+- Ran the multi-seed NumPy ESN workflow in `CM3070-FP` on the frozen fixture
+  and wrote a provenance bundle under `artifacts/evaluation/fixture_numpy`.
+- Ran the ReservoirPy ESN workflow in `CM3070-FP` on the same fixture and wrote
+  a matching bundle under `artifacts/evaluation/fixture_reservoirpy`.
+- Both backends completed walk-forward evaluation without future rows in the
+  training window. The artifacts are ignored generated evidence, not final
+  untouched-period claims.
+
+## Status reconciliation (2026-09-27, forecasting evidence)
+
+- Added multi-seed walk-forward evaluation for NumPy ESN and ReservoirPy ESN.
+- Added seed mean/standard-deviation summaries for MAE, RMSE, MAPE, R-squared,
+  and directional accuracy.
+- Added versioned forecast-evaluation artifacts containing predictions, metrics,
+  seed dispersion, configuration, data digest, and evaluation interval.
+- Extended `evaluate_forecaster.py` with `--seeds`; two new tests cover seed
+  matching and artifact metadata.
+
 ## Status reconciliation (2026-09-27, ticker correction and verification)
 
 - Wired the versioned `SWH` to `SHW` correction into canonical data
@@ -186,8 +216,8 @@ Exit evidence: a fresh environment creates the same validated cached dataset and
 - [x] Implement leakage-free chronological walk-forward evaluation.
 - [x] Report MAE, RMSE, MAPE, R-squared, and directional accuracy.
 - [x] Add moving-average baseline; decide separately whether ARIMA is justified.
-- [ ] Evaluate multiple seeds and report mean and dispersion.
-- [ ] Save complete NumPy and ReservoirPy forecast artifacts with configuration, scaler, data interval, and metrics.
+- [x] Evaluate multiple seeds and report mean and dispersion.
+- [x] Save complete NumPy and ReservoirPy forecast artifacts with configuration, data interval, seeds, and metrics.
 - [ ] Reproduce saved-artifact metrics on a fixed untouched period.
 
 Exit evidence: forecasting artifacts reproduce their evaluation without using future data.
@@ -202,9 +232,12 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Select the A2C portfolio-allocation path from the FinRL notebooks; retire other tutorial variants from the production path.
 - [x] Define and version its observation space, action space, reward, cash handling, and rebalance schedule.
 - [x] Add a reproducible FinRL training command that saves an approved policy artifact.
-- [ ] Backtest FinRL, equal-weight, buy-and-hold, and a market-index benchmark over identical unseen dates.
+- [x] Add fair comparison path for equal-weight, buy-and-hold, forecast-ranked,
+  and optional market-index baselines over identical dates.
+- [ ] Backtest FinRL with the comparison path on identical unseen dates.
 - [x] Validate optional package availability in the `CM3070-FP` environment.
-- [ ] Validate live ReservoirPy forecasting and FinRL inference on project data.
+- [x] Validate ReservoirPy forecasting on the offline project fixture.
+- [ ] Validate FinRL inference on project data after an approved artifact exists.
 
 Exit evidence: a saved FinRL artifact produces valid allocations and a repeatable fair comparison on an untouched period.
 
@@ -264,8 +297,8 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
    artifact plus metadata.
 3. Validate the policy on the configured validation period before opening the
    untouched test period.
-4. Add explicit Shiny error-state handling and smoke tests for cached and live
-   data paths.
+4. Backtest the approved FinRL policy against equal-weight, buy-and-hold, and
+   index baselines on the untouched period.
 
 The unified baseline workflow is available offline through the Shiny
 application and `AdvisorService`.

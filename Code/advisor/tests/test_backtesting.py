@@ -9,6 +9,7 @@ from advisor.backtesting import (
     BuyAndHoldPolicy,
     EqualWeightPolicy,
     ForecastRankedPolicy,
+    run_baseline_comparison,
     run_backtest,
 )
 from advisor.data import CsvMarketDataProvider
@@ -132,6 +133,18 @@ class BacktestingTests(unittest.TestCase):
             self.market_data, ForecastRankedPolicy(forecaster, top_k=1)
         )
         self.assertEqual(forecaster.seen, result.returns["period_start"].tolist())
+
+    def test_baseline_comparison_includes_index_only_when_supplied(self):
+        without_index = run_baseline_comparison(self.market_data)
+        self.assertEqual(set(without_index), {"equal_weight", "buy_and_hold", "forecast_ranked_moving_average_return"})
+        index = self.market_data[self.market_data["ticker"] == "AAPL"].copy()
+        index["ticker"] = "INDEX"
+        with_index = run_baseline_comparison(self.market_data, index_data=index)
+        self.assertIn("market_index", with_index)
+        self.assertEqual(
+            with_index["market_index"].returns["date"].tolist(),
+            without_index["equal_weight"].returns["date"].tolist(),
+        )
 
 
 if __name__ == "__main__":

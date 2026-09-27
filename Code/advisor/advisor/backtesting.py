@@ -50,6 +50,48 @@ class BacktestResult:
     metrics: dict[str, float]
 
 
+def run_baseline_comparison(
+    market_data: pd.DataFrame,
+    config: BacktestConfig | None = None,
+    *,
+    rebalance_every: int = 1,
+    forecast_window: int = 20,
+    forecast_top_k: int = 3,
+    forecast_minimum_return: float | None = None,
+    index_data: pd.DataFrame | None = None,
+) -> dict[str, BacktestResult]:
+    """Run baseline strategies on one identical market-data interval.
+
+    ``index_data`` must contain one canonical ticker representing an external
+    market index. It is evaluated as buy-and-hold with the same date overlap;
+    no index is fabricated when the series is unavailable.
+    """
+    from .forecasting import MovingAverageForecaster
+
+    config = config or BacktestConfig()
+    forecast_policy = ForecastRankedPolicy(
+        MovingAverageForecaster(forecast_window), top_k=forecast_top_k,
+        rebalance_every=rebalance_every,
+        minimum_predicted_return=forecast_minimum_return,
+    )
+    policies = [
+        EqualWeightPolicy(rebalance_every),
+        BuyAndHoldPolicy(),
+        forecast_policy,
+    ]
+    results = {policy.name: run_backtest(market_data, policy, config) for policy in policies}
+    if index_data is not None:
+        index = validate_market_data(index_data)
+        if index["ticker"].nunique() != 1:
+            raise ValueError("index_data must contain exactly one ticker")
+        asset_dates = set(market_data["date"].unique())
+        index = index[index["date"].isin(asset_dates)].reset_index(drop=True)
+        if len(index["date"].unique()) < 2:
+            raise ValueError("index_data must overlap the asset data on at least two dates")
+        results["market_index"] = run_backtest(index, BuyAndHoldPolicy(), config)
+    return results
+
+
 class EqualWeightPolicy:
     """Rebalance to equal asset weights every N decision dates."""
 

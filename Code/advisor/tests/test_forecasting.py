@@ -1,11 +1,12 @@
 import tempfile
 import unittest
 from pathlib import Path
+import json
 
 import numpy as np
 import pandas as pd
 
-from advisor.evaluation import compare_esn_with_baseline
+from advisor.evaluation import compare_esn_with_baseline, evaluate_seeds, write_forecast_evaluation
 from advisor.forecasting import (
     EchoStateNetwork,
     ESNConfig,
@@ -62,6 +63,34 @@ class ESNTests(unittest.TestCase):
         self.assertAlmostEqual(forecast["predicted_return"], 0.0)
         self.assertAlmostEqual(forecast["predicted_close"], 108.9)
         self.assertEqual(forecast["as_of_date"], dates[-1])
+
+    def test_multi_seed_evaluation_reports_dispersion_on_matching_targets(self):
+        dates = pd.date_range("2024-01-01", periods=len(self.series), freq="B")
+        frame = pd.DataFrame({"date": dates, "ticker": "TEST", "close": self.series})
+        predictions, metrics, summary = evaluate_seeds(
+            frame, self.config, [7, 8], min_train_size=25, max_steps=5
+        )
+        self.assertEqual(set(predictions["seed"]), {7, 8})
+        self.assertEqual(len(metrics), 8)
+        self.assertIn("mae_mean", summary.columns)
+        self.assertIn("mae_std", summary.columns)
+
+    def test_forecast_evaluation_writer_records_data_and_seed_metadata(self):
+        dates = pd.date_range("2024-01-01", periods=len(self.series), freq="B")
+        frame = pd.DataFrame({"date": dates, "ticker": "TEST", "close": self.series})
+        predictions, metrics, summary = evaluate_seeds(
+            frame, self.config, [7], min_train_size=25, max_steps=5
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            metadata_path = write_forecast_evaluation(
+                directory, frame, self.config, [7], predictions, metrics, summary,
+                backend="numpy", min_train_size=25, max_steps=5,
+            )
+            self.assertTrue(metadata_path.exists())
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            self.assertEqual(metadata["seeds"], [7])
+            self.assertEqual(metadata["tickers"], ["TEST"])
+            self.assertTrue((Path(directory) / "forecast_seed_summary.csv").exists())
 
 
 if __name__ == "__main__":

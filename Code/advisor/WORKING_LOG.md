@@ -372,6 +372,63 @@ Verification:
 - 44 tests pass in `CM3070-FP`.
 - The universe correction is now executable behavior, not documentation only.
 
+### Completed milestone: multi-seed forecasting evidence
+
+Status: complete for offline evaluation artifacts
+
+Delivered:
+
+- Added `evaluate_seeds` for identical-target walk-forward comparisons across
+  NumPy ESN or ReservoirPy seeds.
+- Added mean and standard-deviation summaries for the required regression and
+  directional metrics.
+- Added `write_forecast_evaluation` for predictions, per-seed metrics, seed
+  summaries, and JSON provenance metadata with data digest and date interval.
+- Extended `evaluate_forecaster.py` with configurable `--seeds`.
+- Added tests for target consistency, dispersion columns, and metadata output.
+
+Verification:
+
+- Forecast tests pass in `CM3070-FP`; the full suite is the next gate.
+- This evidence remains independent of the blocked live Yahoo refresh.
+
+### Optional-stack validation: forecast backends
+
+Status: complete on offline fixture
+
+Verification:
+
+- NumPy ESN multi-seed evaluation completed in `CM3070-FP` with seeds 42 and
+  43, writing predictions, per-seed metrics, dispersion summary, and metadata.
+- ReservoirPy ESN evaluation completed in `CM3070-FP` on the same fixture with
+  seed 42 and the same walk-forward boundaries.
+- Both runs used the frozen AAPL/MSFT fixture and therefore do not establish
+  final 2025 untouched-period performance.
+
+Next action: obtain the full five-ticker dataset through 2025-06-16, then run
+the FinRL A2C trainer and validate all strategy baselines on identical dates.
+
+### Completed milestone: fair baseline comparison path
+
+Status: implementation complete; final unseen-period run pending data and policy
+
+Delivered:
+
+- Added `run_baseline_comparison` for equal-weight, buy-and-hold, and
+  forecast-ranked policies with shared dates and cost assumptions.
+- Added optional market-index evaluation from a supplied one-ticker canonical
+  series with overlap validation.
+- Updated `backtest_portfolios.py` with `--index-csv` and explicit metadata when
+  no index is supplied.
+- Preserved the CLI rebalance interval across all applicable baseline policies.
+
+Verification:
+
+- Fixture comparison CLI completed successfully for AAPL/MSFT.
+- 47 tests pass in `CM3070-FP`.
+- FinRL comparison remains pending until the approved artifact and full-date
+  dataset exist.
+
 ### Completed milestone: verification and repository hygiene
 
 Status: complete for offline evidence

@@ -44,6 +44,21 @@
 > during filtering, caching, and Yahoo requests; it is covered by an offline
 > regression test.
 
+> **Forecast evidence update — 2026-09-27:** Walk-forward evaluation now
+> supports multiple seeds and writes predictions, per-seed metrics, dispersion
+> summaries, configuration, data digest, and evaluation dates as one artifact
+> bundle.
+
+> **Optional backend update — 2026-09-27:** NumPy ESN multi-seed and
+> ReservoirPy ESN fixture evaluations both run in `CM3070-FP` and write the
+> documented artifact bundle. Final claims still require the full five-ticker
+> dataset and untouched 2025 period.
+
+> **Portfolio comparison update — 2026-09-27:** The backtest CLI now has one
+> fair comparison path for equal-weight, buy-and-hold, forecast-ranked, and an
+> optional supplied market-index series using identical overlapping dates and
+> costs. FinRL enters this path after its approved artifact is available.
+
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are

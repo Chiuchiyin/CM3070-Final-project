@@ -15,7 +15,7 @@ from advisor.backtesting import (  # noqa: E402
     BuyAndHoldPolicy,
     EqualWeightPolicy,
     ForecastRankedPolicy,
-    run_backtest,
+    run_baseline_comparison,
 )
 from advisor.data import CsvMarketDataProvider  # noqa: E402
 from advisor.forecasting import MovingAverageForecaster  # noqa: E402
@@ -39,6 +39,10 @@ def parse_args() -> argparse.Namespace:
         help="Optional minimum predicted return; hold cash if no asset qualifies",
     )
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/backtesting"))
+    parser.add_argument(
+        "--index-csv", type=Path,
+        help="Optional canonical one-ticker index CSV evaluated over overlapping dates",
+    )
     return parser.parse_args()
 
 
@@ -50,18 +54,14 @@ def main() -> None:
         transaction_cost_bps=args.transaction_cost_bps,
         slippage_bps=args.slippage_bps,
     )
-    forecast_policy = ForecastRankedPolicy(
-        MovingAverageForecaster(args.forecast_window),
-        top_k=args.forecast_top_k,
+    index_data = CsvMarketDataProvider(args.index_csv).load() if args.index_csv else None
+    results = list(run_baseline_comparison(
+        market_data, config, forecast_window=args.forecast_window,
+        forecast_top_k=args.forecast_top_k,
         rebalance_every=args.rebalance_every,
-        minimum_predicted_return=args.forecast_min_return,
-    )
-    policies = [
-        EqualWeightPolicy(args.rebalance_every),
-        BuyAndHoldPolicy(),
-        forecast_policy,
-    ]
-    results = [run_backtest(market_data, policy, config) for policy in policies]
+        forecast_minimum_return=args.forecast_min_return,
+        index_data=index_data,
+    ).values())
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     pd.concat([result.returns for result in results], ignore_index=True).to_csv(
@@ -73,6 +73,11 @@ def main() -> None:
     pd.DataFrame(
         [{"strategy_name": result.strategy_name, **result.metrics} for result in results]
     ).to_csv(args.output_dir / "backtest_metrics.csv", index=False)
+
+    if index_data is None:
+        (args.output_dir / "backtest_metadata.txt").write_text(
+            "market_index: unavailable (no --index-csv supplied)\n", encoding="utf-8"
+        )
 
     for result in results:
         metrics = result.metrics

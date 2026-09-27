@@ -93,6 +93,30 @@ $env:PYTHONPATH="Code/advisor"
 python Code/advisor/scripts/train_finrl.py --data path/to/mvp_market_data.csv
 ```
 
+When only older data is available, train a separately labelled legacy policy
+with explicit chronological boundaries:
+
+```powershell
+python Code/advisor/scripts/train_finrl.py `
+  --data Code/data/2025-06-16_dow30.csv `
+  --train-end 2018-12-31 --validation-end 2020-06-30 --test-end 2021-11-30 `
+  --timesteps 20000 `
+  --output Code/advisor/artifacts/models/finrl_a2c_legacy.zip `
+  --metadata-output Code/advisor/artifacts/models/finrl_a2c_legacy.metadata.json
+```
+
+Evaluate that approved artifact against the baselines on the same held-out
+interval:
+
+```powershell
+python Code/advisor/scripts/evaluate_finrl_legacy.py `
+  --data Code/data/2025-06-16_dow30.csv `
+  --model Code/advisor/artifacts/models/finrl_a2c_legacy.zip `
+  --metadata Code/advisor/artifacts/models/finrl_a2c_legacy.metadata.json `
+  --tickers AAPL MSFT JPM JNJ PG --start 2020-07-01 --end 2021-11-30 `
+  --output-dir Code/advisor/artifacts/evaluation/finrl_legacy
+```
+
 Refresh the Yahoo cache and rebuild the prepared artifact with retries:
 
 ```powershell
@@ -123,10 +147,10 @@ environment `CM3070-FP`. The versioned universe correction is recorded in
 `configs/universe.yaml`; `SWH` must be normalized to Yahoo symbol `SHW` before
 dataset preparation.
 
-The training command refuses to create an artifact unless the input covers the
-configured train, validation, and untouched test dates. The currently tracked
-`Code/data/2025-06-16_dow30.csv` ends on 2021-11-30 and therefore cannot yet
-produce the configured 2025 test artifact.
+The training command refuses to create an artifact unless the selected train,
+validation, and test dates are covered. The checked-in MVP dates still target
+2025, but explicit legacy overrides allow reproducible training on the tracked
+CSV, which ends on 2021-11-30.
 
 Approved policies are loaded for inference with
 `advisor.finrl_adapter.load_approved_finrl_policy`. The loader validates the
@@ -171,9 +195,10 @@ unavailable rather than substituting an invented series.
 
 The reproducible deliverable is the offline MVP: fixture-backed data
 validation, NumPy and ReservoirPy forecast evaluation, baseline portfolio
-comparison, grounded explanation, and the unified Shiny app. Live Yahoo data,
-the 2025 untouched-period evaluation, and FinRL policy performance are deferred
-until a source dataset covering the configured dates is available.
+comparison, a legacy FinRL artifact and held-out comparison, grounded
+explanation, and the unified Shiny app. Live Yahoo data and the 2025
+untouched-period evaluation remain deferred until a source dataset covering
+the configured dates is available.
 
 The NumPy and ReservoirPy forecast commands have been smoke-tested in
 `CM3070-FP` against the frozen fixture. Their generated evaluation bundles are

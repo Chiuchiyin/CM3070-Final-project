@@ -230,8 +230,10 @@ def train_a2c(market_data, strategy_config, *, seed=42, tickers=None,
         transaction_cost_bps=transaction_cost_bps, slippage_bps=slippage_bps,
         reward_scaling=strategy_config.reward_scaling,
     )
-    model = A2C("MlpPolicy", env, seed=seed, verbose=0,
-                n_steps=min(5, max(1, len(train_data))))
+    model = A2C(
+        "MlpPolicy", env, seed=seed, verbose=0,
+        n_steps=min(5, max(1, len(train_data))), device="cpu",
+    )
     model.learn(total_timesteps=strategy_config.total_timesteps)
     target = Path(output_path or strategy_config.model_path)
     target.parent.mkdir(parents=True, exist_ok=True)

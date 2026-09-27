@@ -474,6 +474,46 @@ Verification:
 
 ## 2026-09-27
 
+### Legacy FinRL training path and consolidated backlog
+
+Status: in progress
+
+- Added explicit `--train-end`, `--validation-end`, `--test-end`, `--lookback`,
+  and `--timesteps` overrides to `scripts/train_finrl.py`.
+- Added `override_strategy_config` so older data can be used without changing
+  the checked-in 2025 MVP dates.
+- Added split metadata to saved policy artifacts.
+- Made the Gymnasium action space finite, as required by Stable-Baselines3.
+- Pinned the MLP A2C trainer to CPU for repeatable non-CNN training without
+  unnecessary GPU warnings.
+- Short legacy smoke training succeeded with the tracked CSV using train
+  through 2018-12-31, validation through 2020-06-30, and test through
+  2021-11-30. The smoke artifact is
+  `artifacts/models/finrl_a2c_legacy_smoke.zip`.
+- Full test suite passes 50 tests in `CM3070-FP`.
+
+Remaining work is consolidated in `IMPLEMENTATION_TODO.md`: validate the full
+legacy artifact and fair comparison, document the offline report, and defer only
+the 2025 untouched-period claim until data access is restored. Possible
+improvements include CPU-pinned SB3 training, checkpoint/resume support, CI,
+and retiring the duplicate Shiny core app after parity review.
+
+### Legacy FinRL artifact completed
+
+Status: complete for the available historical period
+
+- Completed the 20,000-timestep A2C run in `CM3070-FP`.
+- Artifact: `artifacts/models/finrl_a2c_legacy.zip`.
+- Metadata: `artifacts/models/finrl_a2c_legacy.metadata.json`.
+- Split: train through 2018-12-31, validation through 2020-06-30, held-out test
+  from 2020-07-01 through 2021-11-30.
+- Fair comparison artifacts: `artifacts/evaluation/finrl_legacy/`.
+- Held-out cumulative returns: FinRL 71.60%, equal-weight 53.44%, buy-and-hold
+  52.85%, forecast-ranked 46.36%.
+- The comparison uses 10 bps transaction costs and 5 bps slippage for every
+  policy. Results are legacy-period evidence only; the 2025 untouched-period
+  claim remains deferred.
+
 ### Completed milestone: provenance and disclosure coverage
 
 Status: complete for documentation and offline UI evidence

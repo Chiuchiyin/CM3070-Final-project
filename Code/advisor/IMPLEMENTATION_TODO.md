@@ -6,13 +6,25 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-27
 
+## Consolidated status update (2026-09-27)
+
+- [x] Train the legacy FinRL A2C artifact in `CM3070-FP` using train through
+  2018-12-31, validation through 2020-06-30, and test through 2021-11-30.
+- [x] Validate the saved artifact through the approved loader and adapter.
+- [x] Run a fair held-out comparison on 2020-07-01 to 2021-11-30. Saved
+  metrics are under `artifacts/evaluation/finrl_legacy/`.
+- [ ] Complete the report and README reproducibility walkthrough.
+- [ ] Obtain 2025 data before making any 2025 untouched-period claim.
+
 ## Scope decision (2026-09-27, data-access constraint)
 
 - The project will deliver a reproducible offline MVP using the tracked fixture
   and available historical CSV evidence.
-- Live Yahoo refresh, a 2025 five-ticker dataset, FinRL A2C training, and
+- Live Yahoo refresh, a 2025 five-ticker dataset, and the configured 2025
   untouched-period FinRL comparison are deferred when external data access is
   unavailable or rate limited.
+- FinRL A2C training proceeds against the tracked older CSV with explicit
+  legacy split dates and a separately labelled artifact.
 - Deferred items remain documented as future work; they are not represented as
   completed performance claims.
 
@@ -244,11 +256,14 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Add a reproducible FinRL training command that saves an approved policy artifact.
 - [x] Add fair comparison path for equal-weight, buy-and-hold, forecast-ranked,
   and optional market-index baselines over identical dates.
-- [ ] Backtest FinRL with the comparison path on identical unseen dates.
+- [ ] Backtest the legacy FinRL artifact with the comparison path on its
+  held-out 2020-07-01 to 2021-11-30 test interval.
 - [x] Validate optional package availability in the `CM3070-FP` environment.
 - [x] Validate ReservoirPy forecasting on the offline project fixture.
-- [ ] Validate FinRL inference on project data after an approved artifact exists
-  (deferred: no full-date dataset/artifact).
+- [ ] Validate legacy FinRL inference on project data after the full artifact
+  run.
+- [ ] Keep the 2025 untouched-period FinRL comparison deferred until data
+  through 2025-06-16 is available.
 
 Exit evidence: a saved FinRL artifact produces valid allocations and a repeatable fair comparison on an untouched period.
 
@@ -296,18 +311,42 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 - [x] Verify available artifact metadata and chronological boundaries programmatically.
 - [ ] Smoke-test the live Yahoo path (deferred: external rate limit).
 - [ ] Run the final untouched-period evaluation and save generated tables/charts
-  (deferred: no 2025 dataset or approved FinRL artifact).
+  (deferred: no 2025 dataset; the legacy artifact is complete).
 - [ ] Update report claims and figures only from saved generated results.
 - [ ] Document clean setup, training/evaluation, app launch, known limitations, and provenance.
 
 Exit evidence: a new checkout can reproduce the final evaluation and application demo from the README.
 
+## Consolidated remaining work and improvement backlog
+
+### Required next
+
+- [x] Finish and verify the 20,000-timestep legacy FinRL artifact.
+- [x] Load the artifact through `load_approved_finrl_policy` and run inference
+  on the five-ticker historical panel.
+- [x] Run fair legacy test-period comparison across FinRL and all baselines.
+- [x] Record exact results, artifact paths, data digest, and limitations.
+- [x] Add the legacy setup/training/evaluation commands to the README.
+
+### Deferred
+
+- [ ] Refresh Yahoo data through 2025-06-16 when rate limits permit.
+- [ ] Run the untouched 2025 forecast and FinRL comparison.
+- [ ] Update report figures only from regenerated saved artifacts.
+
+### Possible improvements
+
+- [x] Force SB3 training to CPU; expose checkpoint/resume options remains open.
+- [ ] Add training progress/evaluation checkpoints and seed dispersion plots.
+- [ ] Retire `app-core.py` after final Shiny feature-parity review.
+- [ ] Add CI for compile, offline tests, and a short legacy training smoke run.
+
 ## Current Next Item
 
 1. Finalize the offline MVP report and demo using saved fixture-based evidence.
 2. Keep the documented Yahoo/FinRL workflow available for a future data refresh.
-3. Do not make claims about the deferred 2025 untouched period or FinRL
-   performance without the required dataset and artifact.
+3. Do not claim 2025 untouched-period performance until data through 2025-06-16
+   is available.
 
 The unified baseline workflow is available offline through the Shiny
 application and `AdvisorService`.

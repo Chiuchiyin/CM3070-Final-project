@@ -69,6 +69,23 @@
 > trigger training, and mismatched universes or observation schemas are
 > rejected.
 
+## Legacy FinRL training and remaining work (2026-09-27)
+
+This section supersedes the earlier broad offline deferral wording above:
+legacy FinRL training and legacy-period performance are now completed and
+documented; only the 2025 untouched-period claim remains deferred.
+
+FinRL training now supports explicit legacy split overrides and can train on
+the tracked 2014–2021 CSV. The configured 2025 untouched-period comparison
+remains deferred until data through 2025-06-16 is available.
+
+The full 20,000-timestep A2C run completed in `CM3070-FP`. Its approved
+artifact is `Code/advisor/artifacts/models/finrl_a2c_legacy.zip`, with metadata
+in the adjacent JSON file. A fair held-out comparison was completed for
+2020-07-01 through 2021-11-30 using identical costs: FinRL cumulative return
+71.60%, equal-weight 53.44%, buy-and-hold 52.85%, and forecast-ranked 46.36%.
+These are legacy-period results and are not 2025 performance claims.
+
 ## 1. Goal
 
 Turn the current collection of research notebooks and the Shiny stock explorer into one reproducible application that:

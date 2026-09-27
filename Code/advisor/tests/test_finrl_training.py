@@ -9,6 +9,7 @@ from advisor.finrl_training import (
     chronological_partitions,
     dataset_sha256,
     load_strategy_config,
+    override_strategy_config,
     train_a2c,
 )
 
@@ -22,6 +23,30 @@ class FinRLTrainingContractTests(unittest.TestCase):
         self.assertEqual(strategy.algorithm, "a2c")
         self.assertTrue(strategy.include_cash)
         self.assertEqual(strategy.reward, "net_log_return")
+
+    def test_legacy_split_override_preserves_other_strategy_contract(self):
+        strategy = load_strategy_config(CONFIG)
+        legacy = override_strategy_config(
+            strategy,
+            train_end="2018-12-31",
+            validation_end="2020-06-30",
+            test_end="2021-11-30",
+            total_timesteps=123,
+        )
+        self.assertEqual(
+            (legacy.train_end, legacy.validation_end, legacy.test_end),
+            ("2018-12-31", "2020-06-30", "2021-11-30"),
+        )
+        self.assertEqual(legacy.total_timesteps, 123)
+        self.assertEqual(legacy.algorithm, strategy.algorithm)
+        self.assertEqual(legacy.observation_schema, strategy.observation_schema)
+
+    def test_strategy_override_rejects_non_positive_training_settings(self):
+        strategy = load_strategy_config(CONFIG)
+        with self.assertRaisesRegex(ValueError, "lookback"):
+            override_strategy_config(strategy, lookback=0)
+        with self.assertRaisesRegex(ValueError, "total_timesteps"):
+            override_strategy_config(strategy, total_timesteps=0)
 
     def test_partitions_are_chronological_and_non_overlapping(self):
         dates = pd.date_range("2025-01-01", periods=6, freq="D")
@@ -68,6 +93,18 @@ class FinRLTrainingContractTests(unittest.TestCase):
         self.assertTrue(np.isfinite(reward))
         self.assertFalse(truncated)
         self.assertIn("turnover", info)
+        env.close()
+
+    @unittest.skipUnless(__import__("importlib").util.find_spec("gymnasium"), "gymnasium is optional")
+    def test_portfolio_environment_action_bounds_are_finite_for_sb3(self):
+        dates = pd.date_range("2025-01-01", periods=12, freq="D")
+        frame = pd.DataFrame({
+            "date": dates, "ticker": "TEST", "open": 100.0, "high": 101.0,
+            "low": 99.0, "close": np.arange(100.0, 112.0), "volume": 1000,
+        })
+        env = PortfolioAllocationEnv(frame, ["TEST"], lookback=3)
+        self.assertTrue(np.isfinite(env.action_space.low).all())
+        self.assertTrue(np.isfinite(env.action_space.high).all())
         env.close()
 
 

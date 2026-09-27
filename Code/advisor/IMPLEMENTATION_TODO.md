@@ -6,6 +6,16 @@ An item is complete only when its stated verification evidence exists.
 
 Last updated: 2026-09-27
 
+## Scope decision (2026-09-27, data-access constraint)
+
+- The project will deliver a reproducible offline MVP using the tracked fixture
+  and available historical CSV evidence.
+- Live Yahoo refresh, a 2025 five-ticker dataset, FinRL A2C training, and
+  untouched-period FinRL comparison are deferred when external data access is
+  unavailable or rate limited.
+- Deferred items remain documented as future work; they are not represented as
+  completed performance claims.
+
 ## Status reconciliation (2026-09-27, fair portfolio comparison)
 
 - Added `run_baseline_comparison` for equal-weight, buy-and-hold, and
@@ -237,7 +247,8 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [ ] Backtest FinRL with the comparison path on identical unseen dates.
 - [x] Validate optional package availability in the `CM3070-FP` environment.
 - [x] Validate ReservoirPy forecasting on the offline project fixture.
-- [ ] Validate FinRL inference on project data after an approved artifact exists.
+- [ ] Validate FinRL inference on project data after an approved artifact exists
+  (deferred: no full-date dataset/artifact).
 
 Exit evidence: a saved FinRL artifact produces valid allocations and a repeatable fair comparison on an untouched period.
 
@@ -281,9 +292,11 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 
 - [x] Add tests for feature construction, scaling, allocation constraints, metrics, and explanation fallback.
 - [x] Add offline service and Shiny smoke tests.
-- [ ] Smoke-test cached and live Yahoo data paths.
-- [ ] Verify all artifact metadata and chronological boundaries programmatically.
-- [ ] Run the final untouched-period evaluation and save generated tables/charts.
+- [x] Smoke-test the cached/offline data path.
+- [x] Verify available artifact metadata and chronological boundaries programmatically.
+- [ ] Smoke-test the live Yahoo path (deferred: external rate limit).
+- [ ] Run the final untouched-period evaluation and save generated tables/charts
+  (deferred: no 2025 dataset or approved FinRL artifact).
 - [ ] Update report claims and figures only from saved generated results.
 - [ ] Document clean setup, training/evaluation, app launch, known limitations, and provenance.
 
@@ -291,14 +304,10 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
 
 ## Current Next Item
 
-1. Obtain or prepare a canonical five-ticker dataset covering the configured
-   2021-01-01 to 2025-06-16 interval.
-2. Run `scripts/train_finrl.py` in `CM3070-FP` and save the approved A2C
-   artifact plus metadata.
-3. Validate the policy on the configured validation period before opening the
-   untouched test period.
-4. Backtest the approved FinRL policy against equal-weight, buy-and-hold, and
-   index baselines on the untouched period.
+1. Finalize the offline MVP report and demo using saved fixture-based evidence.
+2. Keep the documented Yahoo/FinRL workflow available for a future data refresh.
+3. Do not make claims about the deferred 2025 untouched period or FinRL
+   performance without the required dataset and artifact.
 
 The unified baseline workflow is available offline through the Shiny
 application and `AdvisorService`.

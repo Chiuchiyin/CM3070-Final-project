@@ -1,7 +1,7 @@
 """Selected A2C portfolio training contract and reproducible trainer."""
 
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 import hashlib
 import json
@@ -35,6 +35,43 @@ class StrategyConfig:
     test_end: str
     model_path: Path
     metadata_path: Path
+
+
+def override_strategy_config(
+    strategy_config: StrategyConfig,
+    *,
+    train_end: str | None = None,
+    validation_end: str | None = None,
+    test_end: str | None = None,
+    lookback: int | None = None,
+    total_timesteps: int | None = None,
+) -> StrategyConfig:
+    """Return a reproducible strategy variant for an available data period.
+
+    The checked-in MVP dates describe the intended 2025 evaluation. Legacy
+    data can still be used for a separately labelled training run by
+    overriding the chronological boundaries at the CLI. The normal
+    ``train_a2c`` validation remains in force, so invalid or empty splits are
+    rejected rather than silently producing an artifact.
+    """
+    updates = {
+        name: value
+        for name, value in {
+            "train_end": train_end,
+            "validation_end": validation_end,
+            "test_end": test_end,
+        }.items()
+        if value is not None
+    }
+    if lookback is not None:
+        if int(lookback) <= 0:
+            raise ValueError("lookback must be positive")
+        updates["lookback"] = int(lookback)
+    if total_timesteps is not None:
+        if int(total_timesteps) <= 0:
+            raise ValueError("total_timesteps must be positive")
+        updates["total_timesteps"] = int(total_timesteps)
+    return replace(strategy_config, **updates)
 
 
 def load_strategy_config(path: str | Path) -> StrategyConfig:
@@ -117,7 +154,9 @@ class PortfolioAllocationEnv(gym.Env if gym is not None else object):
         self.reward_scaling = float(reward_scaling)
         observation_size = len(self.tickers) * self.lookback + len(self.tickers) + 1
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(observation_size,), dtype=np.float32)
-        self.action_space = spaces.Box(-np.inf, np.inf, shape=(len(self.tickers) + 1,), dtype=np.float32)
+        # Stable-Baselines3 requires finite continuous action bounds. These
+        # logits are mapped to simplex weights by softmax in step().
+        self.action_space = spaces.Box(-10.0, 10.0, shape=(len(self.tickers) + 1,), dtype=np.float32)
         self.reset()
 
     def _observation(self):
@@ -211,6 +250,11 @@ def train_a2c(market_data, strategy_config, *, seed=42, tickers=None,
         "slippage_bps": slippage_bps,
         "seed": seed,
         "total_timesteps": strategy_config.total_timesteps,
+        "split_config": {
+            "train_end": str(strategy_config.train_end),
+            "validation_end": str(strategy_config.validation_end),
+            "test_end": str(strategy_config.test_end),
+        },
         "data_sha256": dataset_sha256(data),
         "partitions": {
             name: {"start": str(frame["date"].min().date()),

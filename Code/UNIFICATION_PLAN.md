@@ -59,6 +59,11 @@
 > optional supplied market-index series using identical overlapping dates and
 > costs. FinRL enters this path after its approved artifact is available.
 
+> **Scope decision — 2026-09-27:** If external data access remains unavailable,
+> the final MVP will use the reproducible offline fixture and tracked CSV
+> evidence. Live Yahoo refresh, the 2025 untouched period, and FinRL policy
+> performance are deferred and will not be presented as completed claims.
+
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are

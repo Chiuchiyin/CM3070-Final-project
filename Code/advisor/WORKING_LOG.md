@@ -429,6 +429,26 @@ Verification:
 - FinRL comparison remains pending until the approved artifact and full-date
   dataset exist.
 
+## Scope decision: offline MVP delivery
+
+Status: accepted constraint
+
+Because Yahoo access is rate limited and the tracked historical CSV ends in
+2021, the deliverable will use the reproducible offline path as its evidence
+base. It includes validated fixture data, NumPy and ReservoirPy forecast
+evaluation, multi-seed artifacts, equal-weight/buy-and-hold/forecast-ranked
+portfolio comparisons, grounded explanation, and the unified Shiny app.
+
+The following are explicitly deferred and must not be claimed as completed:
+
+- live Yahoo refresh and live-data smoke evidence;
+- a five-ticker dataset through 2025-06-16;
+- FinRL A2C training and an approved policy artifact;
+- FinRL versus baseline comparison on the untouched 2025 period.
+
+This keeps the final report reproducible and honest while preserving the code
+paths needed to complete those items when data access becomes available.
+
 ### Completed milestone: verification and repository hygiene
 
 Status: complete for offline evidence

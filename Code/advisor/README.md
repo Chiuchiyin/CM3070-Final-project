@@ -167,6 +167,14 @@ The comparison command uses identical overlapping dates and costs for every
 baseline. Without `--index-csv`, it records that the index benchmark is
 unavailable rather than substituting an invented series.
 
+## Offline MVP scope
+
+The reproducible deliverable is the offline MVP: fixture-backed data
+validation, NumPy and ReservoirPy forecast evaluation, baseline portfolio
+comparison, grounded explanation, and the unified Shiny app. Live Yahoo data,
+the 2025 untouched-period evaluation, and FinRL policy performance are deferred
+until a source dataset covering the configured dates is available.
+
 The NumPy and ReservoirPy forecast commands have been smoke-tested in
 `CM3070-FP` against the frozen fixture. Their generated evaluation bundles are
 written under `artifacts/evaluation/` and include seed dispersion and data

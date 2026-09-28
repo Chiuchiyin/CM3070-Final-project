@@ -128,11 +128,15 @@ column layout. If Yahoo is rate limited, it exits without replacing the
 prepared artifact; retry later or pass `--source-csv` with a canonical local
 download.
 
-The explanation boundary is implemented in `advisor.explanation`. Use
-`ExplanationContext` for structured facts, `QwenExplainer` for an optional
-lazy generator, and `template_explanation` as the deterministic fallback.
-Generated numeric claims are checked against the supplied context before they
-are displayed.
+The explanation boundary is implemented in `advisor.explanation`. The Shiny
+app offers an instant deterministic summary or an on-demand local
+`Qwen/Qwen3-1.7B` explanation through Smolagents. Smolagents receives one
+read-only `get_advisor_facts` tool containing validated service results; it has
+no file, network, price, metric, or allocation access. `QwenExplainer` checks
+numeric claims against the supplied context and falls back to the deterministic
+template on timeout, unavailable models, empty output, or unsupported claims.
+Set `ADVISOR_QWEN_MODEL` to select another locally cached Hugging Face Qwen
+snapshot. Model loading happens only when the Qwen explanation mode is used.
 
 The Shiny app wraps each analysis request in a recoverable state. Empty ticker
 selection, unavailable data, model failures, and partial backtest results are

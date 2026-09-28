@@ -30,6 +30,9 @@ class ExplanationTests(unittest.TestCase):
         context = build_explanation_context(self.result.forecasts, self.result.allocations)
         self.assertTrue(numeric_claims_are_grounded('The cash allocation is 10.0%.', context))
         self.assertFalse(numeric_claims_are_grounded('The allocation gained 87.3%.', context))
+        self.assertTrue(numeric_claims_are_grounded('As of December 3, 2021, cash is 0.0.', context))
+        self.assertFalse(numeric_claims_are_grounded('As of December 3, 2025, cash is 0.0.', context))
+        self.assertFalse(numeric_claims_are_grounded('The portfolio is 100% cash.', context))
 
     def test_qwen_adapter_falls_back_when_claims_are_unsupported(self):
         explainer = QwenExplainer(generator=lambda prompt: 'The portfolio gained 87.3%.')
@@ -55,6 +58,22 @@ class ExplanationTests(unittest.TestCase):
             backtest_metrics=self.result.backtest_metrics,
         )
         self.assertIn('cash is 10.0%', generated)
+
+    def test_service_reports_qwen_source_and_grounded_fallback(self):
+        provider = CsvMarketDataProvider(FIXTURE)
+        generated = AdvisorService(
+            provider,
+            explainer=QwenExplainer(generator=lambda prompt: 'As of 2021-12-03, cash is 10.0%.'),
+        ).analyse(['AAPL', 'MSFT'], risk_profile='moderate')
+        self.assertEqual(generated.explanation_source, 'qwen')
+        self.assertIn('cash is 10.0%', generated.explanation)
+
+        fallback = AdvisorService(
+            provider,
+            explainer=QwenExplainer(generator=lambda prompt: 'The portfolio gained 87.3%.'),
+        ).analyse(['AAPL', 'MSFT'], risk_profile='moderate')
+        self.assertTrue(fallback.explanation_source.startswith('template:'))
+        self.assertIn('educational historical-data demonstration', fallback.explanation)
 
 if __name__ == '__main__':
     unittest.main()

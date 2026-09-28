@@ -474,6 +474,114 @@ Verification:
 
 ## 2026-09-27
 
+### Section 4.2 Financial Advisor Bot requirements audit (2026-09-28)
+
+Status: core requirements satisfied; delivery/UI gaps remain
+
+- The project now defines a stock-market active portfolio advisor and has a
+  reproducible data path using Yahoo/cache providers plus historical CSV data.
+- The implementation includes transparent baselines, ESN forecasting,
+  FinRL A2C training/evaluation on the available legacy period, and grounded
+  deterministic or local Qwen/Smolagents explanations.
+- The Python Shiny application provides the required non-technical workflow;
+  51 tests pass in `CM3070-FP`, and saved evaluation artifacts provide evidence
+  for the advice-generation workflow.
+- The production app still uses the dependency-light LastClose forecast and
+  equal-weight allocation by default. FinRL is currently an approved,
+  inference-capable offline artifact and held-out comparison, not yet a
+  selectable app strategy.
+- The app Evaluation view currently exposes the service backtest result rather
+  than the complete saved FinRL-versus-baselines comparison. This is a
+  remaining integration task, alongside the responsive Summary/Evaluation
+  layout fix and final report figures.
+
+### Responsive Summary and Evaluation layout (2026-09-28)
+
+Status: implemented and verified
+
+- Split the six KPI cards into two compact rows to prevent horizontal overflow
+  on common laptop widths.
+- Reworked Summary into responsive explanation, data-quality, and disclosure
+  cards. Long deterministic or Qwen text now wraps within the available width.
+- Reworked Evaluation into a responsive comparison card with compact labels,
+  formatted percentages/currency, and a short metric guide for non-technical
+  users.
+- Added narrow-screen CSS and retained the existing historical-data wording.
+- Verification: `app-express.py` compiles and all 51 offline tests pass in
+  `CM3070-FP`.
+- Corrected the Shiny page-sidebar child order after the first restart check;
+  the refreshed app now serves HTTP 200 on port 8000.
+
+### Qwen and Smolagents explanation in Shiny (2026-09-28)
+
+Status: complete for the local cached model
+
+- Added a Shiny explanation selector for an instant template or local Qwen.
+- Connected the existing `QwenExplainer` boundary to `AdvisorService` and
+  exposed the explanation source in the Summary view.
+- Added a local `Qwen/Qwen3-1.7B` generator. It invokes the narrow Smolagents
+  `get_advisor_facts` tool, formats only service-owned figures, and uses Qwen's
+  no-thinking chat template for a concise paragraph.
+- Model loading is lazy and local-cache-only. Missing models, timeouts, empty
+  output, and unsupported claims use the deterministic explanation.
+- A real `CM3070-FP` run returned `explanation_source=qwen` with grounded
+  AAPL allocation, cash, forecast, and historical cumulative-return figures.
+- Added a service-level source/fallback test and stricter date and percentage
+  validation; 51 advisor tests pass.
+
+### Original stock explorer features restored (2026-09-28)
+
+Status: complete
+
+- Added a Market Data tab to the unified app with a Plotly candlestick chart,
+  20-day SMA, chart-ticker selection, date-range filtering, and the latest
+  OHLCV table.
+- Restored current price, absolute change, and percentage-change KPI values
+  from the original Shiny explorer.
+- Expanded offline stock choices to the available tracked Dow 30 CSV, while
+  keeping the five-stock MVP selection as the default.
+- Verified the live app HTML contains Market Data, Summary, Portfolio,
+  Forecast, and Evaluation tabs; HTTP 200 returned on port 8000.
+- Full advisor suite remains green at 50 tests.
+
+### Last-entry demo behavior (2026-09-28)
+
+Status: complete
+
+- The Shiny app now defaults its analysis date and six-month chart window to
+  the last date found in the active CSV, rather than the current calendar date.
+- The sidebar discloses that demo prices are historical, and the KPI labels the
+  displayed price as the latest close.
+- Chart ticker choices follow the selected analysis stocks, so the chart and
+  KPIs use an available selected ticker.
+- Verified the restarted app serves HTTP 200 on port 8000.
+
+### Shiny launch compatibility fix (2026-09-28)
+
+Status: complete
+
+- Installed the declared `shinywidgets` dependency in `CM3070-FP`.
+- The original Express entry point failed under the installed Shiny runtime
+  while tagifying nested dynamic outputs. Converted `app-express.py` to the
+  equivalent Shiny Core `App`/`server` form while preserving the Summary,
+  Portfolio, Forecast, and Evaluation views and the `AdvisorService` boundary.
+- Verified the app starts successfully at `http://127.0.0.1:8000/` and returns
+  HTTP 200.
+
+### Consolidated delivery backlog review
+
+Status: documentation reconciled on 2026-09-28
+
+- Removed stale statements that described legacy FinRL training, artifact
+  loading, and held-out comparison as pending.
+- Marked `app-express.py` as the only production Shiny entry point; retained
+  `app-core.py` as provenance without deleting the original user work.
+- Consolidated the remaining work into three categories in
+  `IMPLEMENTATION_TODO.md`: required report/delivery work, deferred 2025/live
+  data work, and optional improvements.
+- Added `Code/stock-app/README.md` instructions for the production entry point
+  and legacy app status.
+
 ### Legacy FinRL training path and consolidated backlog
 
 Status: in progress

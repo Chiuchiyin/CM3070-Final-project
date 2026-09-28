@@ -5,3 +5,4 @@ reservoirpy>=0.3.15,<0.4
 stable-baselines3>=2.3,<3
 finrl>=0.3.7
 gymnasium>=0.29,<1.1
+smolagents[transformers]>=1.16,<2

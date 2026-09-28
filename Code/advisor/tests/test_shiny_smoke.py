@@ -14,6 +14,9 @@ class ShinySmokeTests(unittest.TestCase):
     def test_app_uses_the_advisor_service_boundary(self):
         source = APP.read_text(encoding='utf-8')
         self.assertIn('service.analyse', source)
+        self.assertIn('qwen_service', source)
+        self.assertIn('SmolagentsQwenGenerator', source)
+        self.assertIn('explanation_status', source)
         self.assertNotIn('yf.Ticker', source)
 
 if __name__ == '__main__':

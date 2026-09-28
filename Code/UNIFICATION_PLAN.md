@@ -61,15 +61,28 @@
 
 > **Scope decision — 2026-09-27:** If external data access remains unavailable,
 > the final MVP will use the reproducible offline fixture and tracked CSV
-> evidence. Live Yahoo refresh, the 2025 untouched period, and FinRL policy
-> performance are deferred and will not be presented as completed claims.
+> evidence. Live Yahoo refresh and the 2025 untouched period remain deferred;
+> legacy FinRL training and held-out performance are now completed and
+> documented separately below.
 
 > **Artifact loading update — 2026-09-26:** Approved FinRL policies now have
 > an inference-only loader that validates metadata before use. The UI cannot
 > trigger training, and mismatched universes or observation schemas are
 > rejected.
 
-## Legacy FinRL training and remaining work (2026-09-27)
+## Legacy FinRL training and remaining work (2026-09-28)
+
+The unified app now offers an on-demand local Qwen/Smolagents explanation
+choice. Smolagents exposes only validated advisor facts; service code formats
+the figures, and unsupported generated claims trigger a deterministic fallback.
+A cached Qwen 1.7B model produced a grounded explanation in `CM3070-FP`.
+
+The unified Shiny entry point now includes a Market Data tab with candlestick
+and 20-day SMA charts, date filtering, latest OHLCV data, price-change KPIs,
+and the tracked Dow 30 stock choices. The five-stock MVP remains the default
+selection. In offline demo mode, the analysis and chart controls default to
+the active CSV's last historical date, and the UI explicitly labels that data
+as a latest close rather than a real-time quote.
 
 This section supersedes the earlier broad offline deferral wording above:
 legacy FinRL training and legacy-period performance are now completed and

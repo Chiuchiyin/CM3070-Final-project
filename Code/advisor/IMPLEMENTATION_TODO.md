@@ -4,7 +4,70 @@ This is the execution checklist for [the unification plan](../UNIFICATION_PLAN.m
 It keeps new work inside `Code/advisor/` until the MVP is demonstrably complete.
 An item is complete only when its stated verification evidence exists.
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
+
+## Assessment brief audit (2026-09-28)
+
+The section 4.2 Financial Advisor Bot requirements are covered as follows:
+
+- [x] Define the problem as active portfolio advice for the stock market.
+- [x] Ingest and validate historical OHLCV data through Yahoo/cache and CSV
+  providers, with an offline fallback and an explicit historical-data label.
+- [x] Implement forecasting and decision methods: last-close and ESN forecast
+  paths, equal-weight and forecast-ranked strategies, plus a trained legacy
+  FinRL A2C policy and fair held-out comparison.
+- [x] Provide a non-technical web interaction through the Python Shiny app,
+  including ticker selection, risk profile, date selection, allocations,
+  forecasts, charts, and recoverable error states.
+- [x] Provide grounded explanations through the deterministic template and
+  optional local Qwen/Smolagents generation with fallback validation.
+- [x] Provide software-engineering and data-science evidence: 51 passing
+  offline tests in `CM3070-FP`, compile/smoke checks, provenance, and saved
+  forecast/backtest/FinRL artifacts.
+- [ ] Expose the saved FinRL policy and the complete multi-strategy comparison
+  directly in the production app. The artifact and held-out evaluation exist,
+  but the live app currently presents the dependency-light LastClose and
+  equal-weight path.
+- [ ] Complete the final report and figures from saved artifacts. The 2025
+  untouched-period claim remains deferred because the available CSV ends on
+  2021-11-30.
+- [ ] Finish the responsive Summary and Evaluation layouts so all content fits
+  common laptop widths without horizontal crowding.
+
+### Summary and Evaluation responsive pass (2026-09-28)
+
+- [x] Split the KPI strip into two compact rows so cards wrap cleanly on
+  laptop screens.
+- [x] Put the Summary explanation and warnings into responsive cards, wrap
+  generated prose, and keep disclosures in a separate readable panel.
+- [x] Format Evaluation metrics with short human-readable labels, safe values
+  for undefined Sharpe/Sortino results, and a compact metric guide.
+- [x] Add responsive CSS for narrow screens and verify app compilation plus
+  all 51 offline tests in `CM3070-FP`.
+- [ ] Revisit the Evaluation panel when the complete saved FinRL comparison is
+  exposed through the production app.
+
+## Qwen and Smolagents app integration (2026-09-28)
+
+- [x] Add an on-demand Qwen + Smolagents explanation choice in the unified
+  Shiny app, alongside the instant deterministic summary.
+- [x] Use the read-only `get_advisor_facts` tool and preformatted service facts
+  for Qwen generation; keep model loading out of app startup.
+- [x] Show whether an explanation came from Qwen or deterministic fallback.
+- [x] Verify cached `Qwen/Qwen3-1.7B` inference through `AdvisorService` in
+  `CM3070-FP`; the real response passed the grounded-claim validator.
+- [x] Preserve fallback for unavailable models, timeouts, empty responses,
+  and unsupported numeric claims.
+
+## Launch verification update (2026-09-28)
+
+- [x] Install the declared `shinywidgets` dependency in `CM3070-FP`.
+- [x] Resolve Shiny runtime incompatibility in the production entry point.
+- [x] Verify `app-express.py:app` starts and returns HTTP 200 on port 8000.
+- [x] Restore original stock-explorer features: candlestick/SMA chart, date
+  range, latest OHLCV table, price change KPIs, and expanded Dow 30 choices.
+- [x] Default the offline demo to the active CSV's last historical entry and
+  label the latest close as historical rather than real-time data.
 
 ## Consolidated status update (2026-09-27)
 
@@ -176,11 +239,12 @@ Last updated: 2026-09-27
 - Data validation, Yahoo/cache loading, MVP configuration, and reproducible preparation are implemented.
 - NumPy ESN, optional ReservoirPy ESN, moving-average, and last-close forecasters are available.
 - Equal-weight, buy-and-hold, and forecast-ranked strategies are available; chronological backtesting includes costs and risk metrics.
-- The FinRL A2C portfolio path is selected and specified; the trainer and
-  artifact contract are implemented, but a trained artifact remains pending
-  until a dataset covers all configured splits.
+- The FinRL A2C portfolio path is selected and specified; the legacy trainer,
+  approved artifact, and held-out comparison are complete. The configured 2025
+  evaluation remains deferred until the dataset covers that period.
 - The Python Shiny app now uses `AdvisorService` and exposes summary, portfolio, forecast, and evaluation views; the cached fixture path is offline-capable.
-- Qwen/Smolagents, approved FinRL artifacts, and final untouched-period evidence remain pending.
+- Qwen/Smolagents integration and final untouched-period evidence remain
+  optional/deferred; the legacy FinRL artifact is complete and approved.
 - Preserve the current uncommitted strategy and test changes while continuing.
 
 ## Product Scope
@@ -194,14 +258,14 @@ fair baselines, and read a grounded explanation in the unified Shiny UI.
 
 | Existing source | Capability to preserve or replace | Unified destination | Status |
 | --- | --- | --- | --- |
-| `FinRLRCModel.ipynb` | Reservoir-computing forecast experiment | `advisor.forecasting` and evaluation CLI | Partial: NumPy and ReservoirPy backends exist; artifact/evaluation evidence remains |
+| `FinRLRCModel.ipynb` | Reservoir-computing forecast experiment | `advisor.forecasting` and evaluation CLI | Implemented for NumPy and ReservoirPy fixture evidence; 2025 evidence deferred |
 | `FinRLRC_indicators_testbed.ipynb` | Technical-indicator experiments | Versioned feature/observation builders | Pending |
-| `Code/FinRL/*.ipynb` | Portfolio environments, DRL training, and performance comparisons | One selected FinRL training pipeline plus `FinRLPolicyAdapter` | Partial: saved-policy adapter exists; reproducible environment, training, and artifacts remain |
+| `Code/FinRL/*.ipynb` | Portfolio environments, DRL training, and performance comparisons | One selected FinRL training pipeline plus `FinRLPolicyAdapter` | Implemented for the legacy A2C artifact and held-out comparison; 2025 evidence deferred |
 | `portfolio_demo.ipynb` | Portfolio allocation presentation | Shiny portfolio and evaluation views | Implemented in baseline UI; final evidence pending |
-| `LLM.ipynb`, `LLM_demo.ipynb` | Qwen-assisted financial narrative | Grounded Qwen/Smolagents explanation adapter | Pending |
+| `LLM.ipynb`, `LLM_demo.ipynb` | Qwen-assisted financial narrative | Grounded Qwen/Smolagents explanation adapter | Implemented in the unified Shiny app with on-demand local model and fallback |
 | `LSTM vs. RC/simulation.ipynb` | Reservoir-model comparison evidence | Optional documented benchmark, not the production path | Pending review |
-| `stock-app/app-express.py`, `stocks.py`, `styles.css` | Ticker selection, historical charts, controls, and Shiny styling | One unified Shiny app using `AdvisorService` | Implemented in `app-express.py`; smoke coverage pending |
-| `stock-app/app-core.py` | Duplicate Shiny implementation | Retire only after Express feature parity | Pending |
+| `stock-app/app-express.py`, `stocks.py`, `styles.css` | Ticker selection, historical charts, controls, and Shiny styling | One unified Shiny app using `AdvisorService` | Implemented in `app-express.py` with smoke coverage |
+| `stock-app/app-core.py` | Duplicate Shiny implementation | Retained as legacy provenance only | No longer a production entry point |
 | `Code/Untitled.ipynb` | Unclassified experiment | Provenance review; do not use in production until classified | Pending |
 
 ## Phase 0: Provenance And Repository Hygiene
@@ -225,7 +289,8 @@ Exit evidence: every retained notebook has a stated purpose and provenance.
 - [x] Add a versioned MVP configuration for five tickers, dates, seeds, costs, paths, and risk profiles.
 - [x] Consolidate runtime and optional-model dependencies into documented install profiles (`requirements.txt` and `requirements-ml.txt`).
 - [x] Merge the existing app dependencies (`shiny`, `shinywidgets`, `plotly`, `faicons`, `yfinance`, and the websocket pin) into the unified install profile.
-- [ ] Keep Python Shiny as the single UI library and retire duplicate app implementations only after feature parity.
+- [x] Keep Python Shiny as the single UI library and designate `app-express.py`
+  as the only production entry point; retain `app-core.py` for provenance.
 - [x] Add a `prepare_data` command that writes a validated dataset and deterministic metadata.
 
 Exit evidence: a fresh environment creates the same validated cached dataset and runs offline tests.
@@ -256,11 +321,11 @@ Exit evidence: forecasting artifacts reproduce their evaluation without using fu
 - [x] Add a reproducible FinRL training command that saves an approved policy artifact.
 - [x] Add fair comparison path for equal-weight, buy-and-hold, forecast-ranked,
   and optional market-index baselines over identical dates.
-- [ ] Backtest the legacy FinRL artifact with the comparison path on its
+- [x] Backtest the legacy FinRL artifact with the comparison path on its
   held-out 2020-07-01 to 2021-11-30 test interval.
 - [x] Validate optional package availability in the `CM3070-FP` environment.
 - [x] Validate ReservoirPy forecasting on the offline project fixture.
-- [ ] Validate legacy FinRL inference on project data after the full artifact
+- [x] Validate legacy FinRL inference on project data after the full artifact
   run.
 - [ ] Keep the 2025 untouched-period FinRL comparison deferred until data
   through 2025-06-16 is available.
@@ -299,7 +364,8 @@ Exit evidence: the same analysis works with Qwen enabled or disabled and cannot 
 - [x] Add explanation view with assumptions, limitations, and unavailable-model state.
 - [x] Handle empty data, short ranges, stale cache, loading, partial result, and model-unavailable states.
 - [x] Use the final row for latest data and label it `Latest close` unless a real-time feed exists.
-- [ ] Retire the duplicate core app only after feature parity and smoke-test coverage.
+- [x] Complete Express feature-parity review and keep `app-core.py` as a
+  non-production provenance copy.
 
 Exit evidence: the complete MVP workflow runs in Shiny without opening a notebook.
 
@@ -313,7 +379,8 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 - [ ] Run the final untouched-period evaluation and save generated tables/charts
   (deferred: no 2025 dataset; the legacy artifact is complete).
 - [ ] Update report claims and figures only from saved generated results.
-- [ ] Document clean setup, training/evaluation, app launch, known limitations, and provenance.
+- [x] Document clean setup, training/evaluation, app launch, known limitations,
+  and provenance.
 
 Exit evidence: a new checkout can reproduce the final evaluation and application demo from the README.
 
@@ -338,7 +405,8 @@ Exit evidence: a new checkout can reproduce the final evaluation and application
 
 - [x] Force SB3 training to CPU; expose checkpoint/resume options remains open.
 - [ ] Add training progress/evaluation checkpoints and seed dispersion plots.
-- [ ] Retire `app-core.py` after final Shiny feature-parity review.
+- [x] Complete the Shiny feature-parity review; retain `app-core.py` only as
+  historical provenance.
 - [ ] Add CI for compile, offline tests, and a short legacy training smoke run.
 
 ## Current Next Item

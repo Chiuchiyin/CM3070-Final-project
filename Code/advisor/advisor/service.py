@@ -17,6 +17,7 @@ class AnalysisResult:
     forecasts: pd.DataFrame
     allocations: pd.DataFrame
     explanation: str
+    explanation_source: str = "template"
     market_data: pd.DataFrame = field(default_factory=pd.DataFrame)
     as_of_date: pd.Timestamp | None = None
     risk_profile: str = "moderate"
@@ -82,11 +83,19 @@ class AdvisorService:
                 ).metrics
             except ValueError as exc:
                 warnings.append(f"Backtest unavailable: {exc}")
+        explanation_source = "template"
         try:
-            explanation = self.explainer(
-                forecasts, allocations, risk_profile=risk_profile,
-                warnings=warnings, backtest_metrics=backtest_metrics,
+            explanation_kwargs = dict(
+                risk_profile=risk_profile, warnings=warnings,
+                backtest_metrics=backtest_metrics,
             )
+            if hasattr(self.explainer, "explain_with_status"):
+                explanation, explanation_source = self.explainer.explain_with_status(
+                    forecasts, allocations, model_version=str(forecasts["model_version"].iloc[0]),
+                    dataset_version=self.dataset_version, **explanation_kwargs,
+                )
+            else:
+                explanation = self.explainer(forecasts, allocations, **explanation_kwargs)
         except TypeError as exc:
             if "unexpected keyword" not in str(exc):
                 raise
@@ -94,6 +103,7 @@ class AdvisorService:
         model_version = str(forecasts["model_version"].iloc[0])
         return AnalysisResult(
             forecasts=forecasts, allocations=allocations, explanation=explanation,
+            explanation_source=explanation_source,
             market_data=market_data, as_of_date=pd.Timestamp(forecasts["as_of_date"].max()),
             risk_profile=risk_profile, warnings=warnings, model_version=model_version,
             dataset_version=self.dataset_version, allocation_changes=changes,

@@ -2,6 +2,49 @@
   --bslib-sidebar-main-bg: #f8f8f8;
 }
 
+.bslib-page-sidebar,
+.bslib-page-sidebar .main,
+.bslib-grid,
+.bslib-card {
+  min-width: 0;
+}
+
+.kpi-grid {
+  margin-bottom: 0.75rem;
+}
+
+.kpi-grid > *,
+.summary-grid > *,
+.evaluation-grid > * {
+  min-width: 0;
+}
+
+.advisor-explanation {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.5;
+}
+
+.advisor-explanation pre,
+.advisor-explanation .shiny-text-output {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.summary-grid,
+.evaluation-grid {
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .summary-grid,
+  .evaluation-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 .plotly .modebar-container {
   display: none !important;
 }

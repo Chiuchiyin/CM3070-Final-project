@@ -1,13 +1,13 @@
-\\chapter{Implementation}
-\\section{Production path}
-The implementation is organised under \\texttt{Code/advisor}. It contains data preparation, schemas, forecasters, strategies, backtesting, explanation, FinRL adapters and service orchestration. The production UI is \\texttt{Code/stock-app/app-express.py}; notebooks are retained as exploration or provenance.
+\chapter{Implementation}
+\section{Production path}
+The implementation is organised under \texttt{Code/advisor}. It contains data preparation, schemas, forecasters, strategies, backtesting, explanation, FinRL adapters and service orchestration. The production UI is \texttt{Code/stock-app/app-express.py}; notebooks are retained as exploration or provenance.
 
-\\section{Data and forecasting}
+\section{Data and forecasting}
 The CSV provider validates canonical long-format data. The Yahoo provider supports cached data and both MultiIndex layouts. Preparation writes deterministic CSV and SHA-256 metadata. Missing tickers are rejected and rate-limited refreshes cannot overwrite valid data. The last-close and moving-average forecasters share a contract. The ESN scales training data, runs a fixed reservoir, discards washout states and fits an output layer. The small saved evaluation gives aggregate ESN MAE 3.04 versus 2.93 for last close, and RMSE 3.67 versus 3.68. ESN directional accuracy is 0.35 versus 0 in this small output.
 
-\\begin{figure}[H]\\centering\\includegraphics[width=.8\\textwidth]{Assets/forecast_metrics.png}\\caption{Forecast errors from the saved evaluation CSV.}\\label{fig:forecast}\\end{figure}
+\begin{figure}[H]\centering\includegraphics[width=.8\textwidth]{Assets/forecast_metrics.png}\caption{Forecast errors from the saved evaluation CSV.}\label{fig:forecast}\end{figure}
 
-\\section{Strategies and interface}
+\section{Strategies and interface}
 Equal weight distributes investable capital, buy and hold preserves initial weights, and forecast-ranked allocation selects predicted returns before applying cash floors. The FinRL adapter validates action length, ticker order, observation schema and warm-up. The approved A2C artifact used 20,000 timesteps, seed 42, a 20-period lookback, five tickers (AAPL, JNJ, JPM, MSFT and PG), cash actions and net-log-return reward.
 
 The backtester charges 10 basis points transaction cost and 5 basis points slippage. The deterministic explanation reports risk profile, forecasts, weights, cash, date and historical metrics. Optional Qwen output passes through a restricted facts tool and numeric-claim validation. The app provides Market Data, Summary, Portfolio, Forecast and Evaluation views, a Plotly candlestick/SMA chart and recoverable error states. The project environment passed 51 offline tests.

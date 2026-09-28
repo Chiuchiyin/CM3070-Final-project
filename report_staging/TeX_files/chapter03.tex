@@ -1,13 +1,13 @@
-\\chapter{Design}
-\\section{Architecture}
-The user selects tickers, date, risk profile and explanation mode. The Shiny application calls \\texttt{AdvisorService}; the service requests validated data, invokes a forecaster, maps forecasts to a strategy, computes benchmarks and builds an explanation context.
+\chapter{Design}
+\section{Architecture}
+The user selects tickers, date, risk profile and explanation mode. The Shiny application calls \texttt{AdvisorService}; the service requests validated data, invokes a forecaster, maps forecasts to a strategy, computes benchmarks and builds an explanation context.
 
-\\begin{figure}[H]\\centering\\fbox{\\begin{minipage}{.9\\textwidth}\\centering User controls $\\rightarrow$ Shiny $\\rightarrow$ \\texttt{AdvisorService}\\\\ Data provider $\\rightarrow$ forecast $\\rightarrow$ allocation $\\rightarrow$ chronological backtest\\\\ Structured facts $\\rightarrow$ deterministic template or Qwen + Smolagents\\end{minipage}}\\caption{System architecture.}\\label{fig:architecture}\\end{figure}
+\begin{figure}[H]\centering\fbox{\begin{minipage}{.9\textwidth}\centering User controls $\rightarrow$ Shiny $\rightarrow$ \texttt{AdvisorService}\\ Data provider $\rightarrow$ forecast $\rightarrow$ allocation $\rightarrow$ chronological backtest\\ Structured facts $\rightarrow$ deterministic template or Qwen + Smolagents\end{minipage}}\caption{System architecture.}\label{fig:architecture}\end{figure}
 
-\\section{Contracts and models}
-Canonical data contain \\texttt{date}, \\texttt{ticker}, \\texttt{open}, \\texttt{high}, \\texttt{low}, \\texttt{close} and \\texttt{volume}. Dates are unique and ordered, prices positive, OHLC relationships valid and configured tickers present. Forecast records contain ticker, as-of date, prediction, model and training end date. Allocation records contain weights, cash, strategy and risk constraints. The known \\texttt{SWH} to \\texttt{SHW} correction is normalised.
+\section{Contracts and models}
+Canonical data contain \texttt{date}, \texttt{ticker}, \texttt{open}, \texttt{high}, \texttt{low}, \texttt{close} and \texttt{volume}. Dates are unique and ordered, prices positive, OHLC relationships valid and configured tickers present. Forecast records contain ticker, as-of date, prediction, model and training end date. Allocation records contain weights, cash, strategy and risk constraints. The known \texttt{SWH} to \texttt{SHW} correction is normalised.
 
 The last-close model is the forecast baseline. The ESN uses scaled features, a fixed reservoir, washout and an output layer. The production strategy ranks a 20-period moving-average return forecast, applies a risk-profile cash floor and enforces long-only weights summing to one including cash. Equal weight and buy and hold are benchmarks. The FinRL A2C policy is loaded only when metadata matches.
 
-\\section{Verification}
+\section{Verification}
 The backtester exposes only observations available at each decision date, charges costs when weights change and records returns, weights, drawdown and turnover. Unit tests cover data, forecasting, allocations, policy contracts, metrics, explanation grounding and UI smoke behaviour. Integration tests run from a fixed fixture without network or an LLM.

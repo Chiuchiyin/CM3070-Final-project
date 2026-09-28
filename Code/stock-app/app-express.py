@@ -174,6 +174,7 @@ app_ui = ui.page_sidebar(
                                 "a guarantee of future performance."
                             ),
                             ui.output_data_frame("evaluation_metrics"),
+                            output_widget("evaluation_chart"),
                         ),
                         ui.card(
                             ui.card_header("Metric guide"),
@@ -232,6 +233,12 @@ def server(input: Inputs, output: Outputs, session: Session):
             tickers = input.tickers()
             if not tickers:
                 return {"result": None, "error": "Select at least one ticker."}
+            if input.allocation_strategy() == "finrl_a2c" and set(tickers) != set(MVP_TICKERS):
+                return {
+                    "result": None,
+                    "error": "The legacy FinRL A2C artifact supports exactly the five MVP stocks: "
+                    + ", ".join(MVP_TICKERS),
+                }
             value = input.as_of()
             if input.allocation_strategy() == "finrl_a2c":
                 selected_service = get_finrl_service()
@@ -522,5 +529,35 @@ def server(input: Inputs, output: Outputs, session: Session):
                 }
             )
         return pd.DataFrame(rows)
+
+    @output
+    @render_widget
+    def evaluation_chart():
+        result = current_result()
+        if result is None or not result.backtest_metrics:
+            return go.Figure().update_layout(title="Evaluation chart available after analysis")
+        labels = {
+            "equal_weight": "Equal weight",
+            "buy_and_hold": "Buy and hold",
+            "forecast_ranked_moving_average_return": "Forecast ranked",
+            "finrl_a2c": "FinRL A2C",
+        }
+        names = list(result.backtest_metrics)
+        values = [float(result.backtest_metrics[name].get("cumulative_return", 0.0)) for name in names]
+        fig = go.Figure(go.Bar(
+            x=[labels.get(name, name.replace("_", " ").title()) for name in names],
+            y=values,
+            text=[f"{value:+.1%}" for value in values],
+            textposition="auto",
+            marker_color=["#6c757d" if name == "equal_weight" else "#276fbf" for name in names],
+        ))
+        fig.update_layout(
+            title="Historical cumulative return comparison",
+            yaxis_title="Cumulative return",
+            yaxis_tickformat=".0%",
+            template="plotly_white",
+            margin={"l": 45, "r": 15, "t": 45, "b": 55},
+        )
+        return fig
 
 app = App(app_ui, server)

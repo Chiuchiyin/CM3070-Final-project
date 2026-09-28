@@ -1,18 +1,18 @@
-\\chapter{Evaluation}
-\\section{Method}
+\chapter{Evaluation}
+\section{Method}
 The evaluation asks whether the system is reproducible and leakage-free, whether policies produce valid historical comparisons after costs, whether the UI supports the workflow, and whether explanations remain faithful without Qwen. Evidence combines automated tests, saved forecast metrics, chronological backtests, artifact metadata and app smoke tests. No user study was conducted.
 
-\\section{Forecast results}
+\section{Forecast results}
 For AAPL, last close has MAE 2.51 and RMSE 3.07, while ESN has MAE 2.87 and RMSE 3.36. For MSFT, ESN improves MAE from 3.35 to 3.20 and RMSE from 4.21 to 3.96. Across both tickers, last close has MAE 2.93 and RMSE 3.68; ESN has MAE 3.04 and RMSE 3.67. The mixed result validates the implementation but does not establish ESN superiority.
 
-\\section{Portfolio results}
+\section{Portfolio results}
 The A2C artifact was trained through 2018-12-31, validated through 2020-06-30 and tested from 2020-07-01 to 2021-11-30. All policies used 10 basis points transaction cost and 5 basis points slippage.
 
-\\begin{table}[H]\\centering\\caption{Held-out portfolio comparison.}\\begin{tabular}{lrrrrr}\\toprule Strategy & Cum. return & Annual return & Volatility & Sharpe & Max drawdown\\\\\\midrule FinRL A2C & 71.60\\% & 46.40\\% & 28.54\\% & 1.48 & -19.46\\%\\\\ Equal weight & 53.44\\% & 35.28\\% & 14.28\\% & 2.19 & -9.97\\%\\\\ Buy and hold & 52.85\\% & 34.92\\% & 14.54\\% & 2.13 & -10.37\\%\\\\ Forecast ranked & 46.36\\% & 30.85\\% & 15.64\\% & 1.80 & -13.63\\%\\\\\\bottomrule\\end{tabular}\\end{table}
+\begin{table}[H]\centering\caption{Held-out portfolio comparison.}\begin{tabular}{lrrrrr}\toprule Strategy & Cum. return & Annual return & Volatility & Sharpe & Max drawdown\\\midrule FinRL A2C & 71.60\% & 46.40\% & 28.54\% & 1.48 & -19.46\%\\ Equal weight & 53.44\% & 35.28\% & 14.28\% & 2.19 & -9.97\%\\ Buy and hold & 52.85\% & 34.92\% & 14.54\% & 2.13 & -10.37\%\\ Forecast ranked & 46.36\% & 30.85\% & 15.64\% & 1.80 & -13.63\%\\\bottomrule\end{tabular}\end{table}
 
 FinRL has the highest return but also the highest volatility and drawdown. Equal weight has the strongest risk-adjusted result. Forecast-ranked allocation underperforms both simple baselines and has total turnover 40.03 versus 2.45 for equal weight, showing that forecast responsiveness can be costly.
 
-\\begin{figure}[H]\\centering\\includegraphics[width=.8\\textwidth]{Assets/cumulative_returns.png}\\caption{Cumulative returns on the identical legacy held-out interval.}\\label{fig:returns}\\end{figure}
+\begin{figure}[H]\centering\includegraphics[width=.8\textwidth]{Assets/cumulative_returns.png}\caption{Cumulative returns on the identical legacy held-out interval.}\label{fig:returns}\end{figure}
 
-\\section{Critical evaluation}
+\section{Critical evaluation}
 The strongest achievement is integration: disconnected notebooks became one service with explicit contracts and visible provenance. Limitations are substantial: financial regimes change, ESN evidence is small, FinRL is one seed and period, the live UI does not yet select FinRL, Yahoo can be rate-limited and the configured 2025 period is unavailable. No user study or accessibility audit was performed. Future work should obtain current data, repeat comparisons over regimes and seeds, expose FinRL only after compatibility checks and test explanation clarity.

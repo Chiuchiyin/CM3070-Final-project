@@ -1,11 +1,11 @@
-\\chapter{Introduction}
-\\section{Project concept}
-This project implements \\emph{CM3020 Artificial Intelligence, Project Idea 2: Financial Advisor Bot}. The template requires analysis of financial data, dynamic investment recommendations, a non-technical interface, explanations and evidence of evaluation. The chosen domain is the stock market. The system is educational decision support and simulated portfolio analysis; it does not place orders or provide regulated personal financial advice.
+\chapter{Introduction}
+\section{Project concept}
+This project implements \emph{CM3020 Artificial Intelligence, Project Idea 2: Financial Advisor Bot}. The template requires analysis of financial data, dynamic investment recommendations, a non-technical interface, explanations and evidence of evaluation. The chosen domain is the stock market. The system is educational decision support and simulated portfolio analysis; it does not place orders or provide regulated personal financial advice.
 
 The problem is that a retail investor must combine noisy time-series data, forecasts, portfolio constraints and risk judgements. A chart does not explain how a portfolio should be formed, while an opaque recommendation is difficult to trust. The project treats advice as a pipeline: validated data, forecast, constrained allocation, chronological testing and a plain-language explanation identifying dates and limitations.
 
-\\section{Users and objectives}
-The target user is a non-specialist investor exploring a small stock universe. The Shiny application shows market data, summary information, allocations, forecasts and evaluation metrics. Objectives were to build a reproducible data path; evaluate reservoir computing against transparent baselines; implement constrained policies including FinRL A2C; create a testable \\texttt{AdvisorService}; provide grounded explanations; and evaluate behaviour without look-ahead leakage.
+\section{Users and objectives}
+The target user is a non-specialist investor exploring a small stock universe. The Shiny application shows market data, summary information, allocations, forecasts and evaluation metrics. Objectives were to build a reproducible data path; evaluate reservoir computing against transparent baselines; implement constrained policies including FinRL A2C; create a testable \texttt{AdvisorService}; provide grounded explanations; and evaluate behaviour without look-ahead leakage.
 
-\\section{Scope}
-The final product is an offline-reproducible MVP using daily data, simulated weights and historical backtesting. Live order execution, intraday data, automatic retraining, user accounts and a guaranteed 2025 test period are outside scope. Production code is under \\texttt{Code/advisor}, with \\texttt{Code/stock-app/app-express.py} as the UI entry point.
+\section{Scope}
+The final product is an offline-reproducible MVP using daily data, simulated weights and historical backtesting. Live order execution, intraday data, automatic retraining, user accounts and a guaranteed 2025 test period are outside scope. Production code is under \texttt{Code/advisor}, with \texttt{Code/stock-app/app-express.py} as the UI entry point.

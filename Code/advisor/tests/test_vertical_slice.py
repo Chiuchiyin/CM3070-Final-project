@@ -12,6 +12,7 @@ from advisor.data import (
 )
 from advisor.forecasting import ESNConfig, ESNForecaster
 from advisor.service import AdvisorService
+from advisor.backtesting import CASH
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "market_data.csv"
@@ -70,6 +71,21 @@ class VerticalSliceTests(unittest.TestCase):
         self.assertEqual(set(result.forecasts["model_name"]), {"numpy_esn"})
         self.assertIn("numpy_esn", result.explanation)
         self.assertAlmostEqual(result.allocations["weight"].sum(), 1.0)
+
+    def test_service_accepts_saved_policy_target_weight_contract(self):
+        class FakeSavedPolicy:
+            name = "finrl_a2c"
+
+            def target_weights(self, history, current_weights):
+                return pd.Series({"AAPL": 0.7, "MSFT": 0.2, CASH: 0.1})
+
+        result = AdvisorService(
+            CsvMarketDataProvider(FIXTURE),
+            strategy=FakeSavedPolicy(),
+        ).analyse(["AAPL", "MSFT"], risk_profile="moderate")
+        self.assertAlmostEqual(result.allocations["weight"].sum() + result.allocations["cash_weight"].iloc[0], 1.0)
+        self.assertEqual(result.allocations["strategy_name"].iloc[0], "finrl_a2c")
+        self.assertGreater(result.allocations.loc[result.allocations["ticker"] == "AAPL", "weight"].iloc[0], 0.5)
 
 
 if __name__ == "__main__":

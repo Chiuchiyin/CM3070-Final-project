@@ -16,3 +16,17 @@ FinRL has the highest return but also the highest volatility and drawdown. Equal
 
 \section{Critical evaluation}
 The strongest achievement is integration: disconnected notebooks became one service with explicit contracts and visible provenance. Limitations are substantial: financial regimes change, ESN evidence is small, FinRL is one seed and period, the live UI does not yet select FinRL, Yahoo can be rate-limited and the configured 2025 period is unavailable. No user study or accessibility audit was performed. Future work should obtain current data, repeat comparisons over regimes and seeds, expose FinRL only after compatibility checks and test explanation clarity.
+\section{Evaluation of the preliminary claims}
+The preliminary report anticipated three principal risks: reservoir forecasts degrading under regime shift, unstable A2C behaviour and hallucination in the language interface. The final evidence confirms that these risks remain real, but the implementation handles them more safely. ESN results are compared with last close; FinRL is reported as one policy on one legacy interval; and Qwen is constrained to service-owned facts with deterministic fallback.
+
+The preliminary plan also proposed real-time feeds, multimodal sentiment, TD3/PPO comparisons, scheduled retraining and personalised memory. These are not reported as completed features. The available dataset ends in 2021, Yahoo access can be rate-limited, and no user study was conducted. Distinguishing delivered evidence from deferred work is necessary for a valid evaluation.
+
+\section{Validity, reliability and metrics}
+Internal validity is supported by chronological partitions, training-only scaling, identical costs across strategies and artifact checks. External validity is limited to one legacy period, one five-stock universe and one A2C seed. Cumulative return alone would be misleading: FinRL has the highest return, while equal weight has higher Sharpe and lower drawdown. Forecast-ranked allocation has lower return and much higher turnover, showing that a responsive policy can be costly.
+
+The software evidence is stronger than the behavioural evidence. Fifty-one offline tests, fixture execution and HTTP 200 smoke checks support workflow reliability, but they do not prove that all users understand forecasts, recommendations and historical returns. A structured usability study and accessibility audit remain future work.
+
+\section{Demonstration and extensions}
+The final video should demonstrate stock selection, charting, analysis, forecast, allocation, evaluation and the grounded advisor response in three to five minutes. It should use the completed Shiny application and explain historical versus estimated values. Existing preliminary videos should not be treated as proof of the final implementation unless they are re-recorded after the final integration.
+
+The most valuable extension is a versioned current-data evaluation through the configured 2025 endpoint, using several seeds and market regimes. Other extensions include a validated FinRL strategy selector, a user study, timestamp-aligned news features, risk-aware rewards and scheduled retraining. Live brokerage integration should remain outside scope until these safeguards are stronger.

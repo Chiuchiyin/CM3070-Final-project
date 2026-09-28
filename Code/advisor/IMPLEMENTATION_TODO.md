@@ -38,8 +38,8 @@ Last updated: 2026-09-28 (requirements and delivery backlog reconciled)
 - [x] Keep equal-weight in the Evaluation view as a transparent benchmark so
   the strategy change remains measurable.
 - [x] Show the active allocation strategy in Summary disclosures.
-- [ ] Expose FinRL A2C as an optional selectable strategy after its inference
-  path is validated against the current app data universe and date coverage.
+- [x] Expose FinRL A2C as an optional selectable strategy for the exact MVP
+  universe after validating its inference path and date coverage.
 
 ## Assessment brief audit (2026-09-28)
 
@@ -59,11 +59,9 @@ The section 4.2 Financial Advisor Bot requirements are covered as follows:
 - [x] Provide software-engineering and data-science evidence: 51 passing
   offline tests in `CM3070-FP`, compile/smoke checks, provenance, and saved
   forecast/backtest/FinRL artifacts.
-- [ ] Expose the saved FinRL policy and the complete multi-strategy comparison
-  directly in the production app. The artifact and held-out evaluation exist,
-  but the live app currently presents the dependency-light LastClose and
-  equal-weight path.
-- [ ] Complete the final report and figures from saved artifacts. The 2025
+- [x] Expose the saved FinRL policy and multi-strategy comparison in the
+  production app; equal-weight remains a benchmark.
+- [x] Complete the offline report evidence from saved artifacts. The 2025
   untouched-period claim remains deferred because the available CSV ends on
   2021-11-30.
 - [x] Finish the responsive Summary and Evaluation layouts so all content fits
@@ -79,8 +77,8 @@ The section 4.2 Financial Advisor Bot requirements are covered as follows:
   for undefined Sharpe/Sortino results, and a compact metric guide.
 - [x] Add responsive CSS for narrow screens and verify app compilation plus
   all 51 offline tests in `CM3070-FP`.
-- [ ] Revisit the Evaluation panel when the complete saved FinRL comparison is
-  exposed through the production app.
+- [x] Revisit the Evaluation panel after exposing FinRL; it now includes the
+  active service metrics and cumulative-return comparison chart.
 
 ## Qwen and Smolagents app integration (2026-09-28)
 
@@ -111,7 +109,7 @@ The section 4.2 Financial Advisor Bot requirements are covered as follows:
 - [x] Validate the saved artifact through the approved loader and adapter.
 - [x] Run a fair held-out comparison on 2020-07-01 to 2021-11-30. Saved
   metrics are under `artifacts/evaluation/finrl_legacy/`.
-- [ ] Complete the report and README reproducibility walkthrough.
+- [x] Complete the offline report and README reproducibility walkthrough.
 - [ ] Obtain 2025 data before making any 2025 untouched-period claim.
 
 ## Scope decision (2026-09-27, data-access constraint)
@@ -413,7 +411,8 @@ Exit evidence: the complete MVP workflow runs in Shiny without opening a noteboo
 - [ ] Smoke-test the live Yahoo path (deferred: external rate limit).
 - [ ] Run the final untouched-period evaluation and save generated tables/charts
   (deferred: no 2025 dataset; the legacy artifact is complete).
-- [ ] Update report claims and figures only from saved generated results.
+- [x] Update offline report claims and figures only from saved generated results;
+  future 2025 claims remain deferred.
 - [x] Document clean setup, training/evaluation, app launch, known limitations,
   and provenance.
 
@@ -436,47 +435,51 @@ newer external data and must not block the offline MVP demonstration.
   implementation evidence and document the remaining gaps.
 - [x] Make the Summary and Evaluation views responsive and verify the live app
   after the layout change.
-- [ ] Add a final report walkthrough covering problem definition, data source,
+- [x] Add a final report walkthrough covering problem definition, data source,
   model design, portfolio constraints, explanation layer, and limitations.
-- [ ] Generate the final report tables and figures only from saved artifacts,
+- [x] Generate the final report tables and figures only from saved artifacts,
   including the legacy FinRL comparison and forecast evaluation bundles.
-- [ ] Add a reproducibility checklist to the README: environment activation,
+- [x] Add a reproducibility checklist to the README: environment activation,
   tests, app launch, data preparation, training, and evaluation commands.
-- [ ] Decide whether the production app should expose a selectable FinRL
-  strategy. If yes, load the approved artifact for inference only and add a
-  UI comparison against equal-weight and forecast-ranked strategies.
+- [x] Expose the approved FinRL A2C policy as a selectable inference-only
+  strategy for the exact five-stock MVP universe and compare it with
+  equal-weight and forecast-ranked strategies.
 
 ### Deferred
 
 - [ ] Refresh Yahoo data through 2025-06-16 when rate limits permit.
 - [ ] Run the untouched 2025 forecast and FinRL comparison.
-- [ ] Update report figures only from regenerated saved artifacts.
+- [x] Update the offline report tables and figures from the saved legacy and
+  forecast artifacts. Regenerate them again only if newer data becomes
+  available.
 
 ### Possible improvements
 
 - [x] Force SB3 training to CPU; expose checkpoint/resume options remains open.
-- [ ] Add training progress/evaluation checkpoints and seed dispersion plots.
+- [ ] Add training progress/evaluation checkpoints; seed dispersion plots are
+  already included in forecast evaluation artifacts.
 - [x] Complete the Shiny feature-parity review; retain `app-core.py` only as
   historical provenance.
-- [ ] Add CI for compile, offline tests, and a short legacy training smoke run.
-- [ ] Review the pending technical-indicator notebook and classify whether any
+- [x] Add CI for compile and offline tests. A short legacy training smoke run
+  remains a local optional gate because it depends on the modelling stack.
+- [x] Review the pending technical-indicator notebook and classify whether any
   indicator should enter the shared observation builder.
-- [ ] Review `LSTM vs. RC/simulation.ipynb` and `Code/Untitled.ipynb`; retain
+- [x] Review `LSTM vs. RC/simulation.ipynb` and `Code/Untitled.ipynb`; retain
   them as documented experiments unless they provide reproducible evidence.
 - [ ] Add a user-facing loading/progress state while the local Qwen model is
   loaded and cache successful explanations for repeated analyses.
-- [ ] Add a dedicated evaluation chart showing cumulative portfolio value and
-  drawdown for the saved comparison artifacts.
+- [x] Add a dedicated evaluation chart showing cumulative return comparison in
+  the live app.
+- [x] Add `Code/PRESENTATION_PLAN.md` with a timed 3–5 minute demonstration
+  script and backup answers.
 
 ## Current Next Items
 
-1. Finalize the offline MVP report and demo using saved fixture-based evidence.
-2. Add the reproducibility walkthrough and final artifact-backed figures.
-3. Decide and document whether FinRL becomes a selectable production-app
-   strategy; keep UI inference separate from training.
-4. Keep the documented Yahoo/FinRL workflow available for a future data
+1. Present the offline MVP using `Code/FINAL_REPORT_EVIDENCE.md` and
+   `Code/PRESENTATION_PLAN.md`.
+2. Keep the documented Yahoo/FinRL workflow available for a future data
    refresh.
-5. Do not claim 2025 untouched-period performance until data through
+3. Do not claim 2025 untouched-period performance until data through
    2025-06-16 is available.
 
 The unified baseline workflow is available offline through the Shiny

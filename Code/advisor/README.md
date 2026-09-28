@@ -10,7 +10,7 @@ The current slice is dependency-light and works offline:
 - canonical market-data validation;
 - CSV fixture/cache provider;
 - last-close forecast baseline;
-- equal-weight long-only allocation;
+- forecast-ranked long-only allocation with a risk-profile cash floor;
 - grounded deterministic explanation;
 - an orchestration service and offline tests.
 - deterministic NumPy ESN fallback and optional ReservoirPy ESN forecasting;
@@ -21,6 +21,8 @@ The current slice is dependency-light and works offline:
 - transaction costs, slippage, portfolio risk metrics, and turnover reporting.
 - risk-profile cash floors, freshness warnings, allocation changes, and
   baseline metrics in the service result;
+- selectable inference-only FinRL A2C allocation for the exact five-stock MVP
+  universe;
 - Summary, Portfolio, Forecast, and Evaluation views in the unified Shiny app.
 
 Run from this directory (the package is intentionally kept directly under `advisor/`):
@@ -92,6 +94,35 @@ conda activate CM3070-FP
 $env:PYTHONPATH="Code/advisor"
 python Code/advisor/scripts/train_finrl.py --data path/to/mvp_market_data.csv
 ```
+
+## Reproducibility checklist
+
+From the repository root:
+
+```powershell
+conda activate CM3070-FP
+$env:PYTHONPATH="Code/advisor"
+python -m unittest discover -s Code/advisor/tests -v
+python -m py_compile Code/stock-app/app-express.py Code/advisor/advisor/*.py
+python Code/advisor/scripts/prepare_data.py --source-csv Code/data/2025-06-16_dow30.csv
+python Code/advisor/scripts/train_finrl.py `
+  --data Code/data/2025-06-16_dow30.csv `
+  --train-end 2018-12-31 --validation-end 2020-06-30 --test-end 2021-11-30 `
+  --timesteps 20000 `
+  --output Code/advisor/artifacts/models/finrl_a2c_legacy.zip `
+  --metadata-output Code/advisor/artifacts/models/finrl_a2c_legacy.metadata.json
+python Code/advisor/scripts/evaluate_finrl_legacy.py `
+  --data Code/data/2025-06-16_dow30.csv `
+  --model Code/advisor/artifacts/models/finrl_a2c_legacy.zip `
+  --metadata Code/advisor/artifacts/models/finrl_a2c_legacy.metadata.json `
+  --tickers AAPL MSFT JPM JNJ PG --start 2020-07-01 --end 2021-11-30 `
+  --output-dir Code/advisor/artifacts/evaluation/finrl_legacy
+python -m shiny run Code/stock-app/app-express.py:app --host 127.0.0.1 --port 8000
+```
+
+The generated evaluation artifacts, rather than notebook output, are the
+source for final report tables and figures. See [`Code/PRESENTATION_PLAN.md`](../PRESENTATION_PLAN.md)
+for the short demonstration script.
 
 When only older data is available, train a separately labelled legacy policy
 with explicit chronological boundaries:

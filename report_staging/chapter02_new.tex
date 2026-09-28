@@ -1,0 +1,51 @@
+\\chapter{Literature Review}
+
+\\section{Review scope}
+The Financial Advisor Bot brief requires a system that analyses financial data, generates a dynamic investment strategy, supports a non-technical user and explains its recommendations. The literature relevant to this project therefore spans forecasting models, portfolio decision-making, financial data infrastructure, multimodal signals and natural-language interfaces. This chapter reviews those areas and uses them to justify the final architecture.
+
+\\section{Financial forecasting}
+Financial prices are difficult prediction targets. Market data are noisy, non-stationary and affected by changing economic regimes, corporate events and investor behaviour. A model that performs well in one period can fail when volatility, trend or market composition changes. Classical approaches such as ARIMA are useful because their assumptions and parameters are interpretable, but their linear and stationarity assumptions are restrictive for modern multi-asset data. A last-close forecast is consequently an essential baseline: a complex model should only be preferred when it improves on simply carrying forward the latest observation.
+
+Reservoir computing provides a lightweight recurrent alternative. An Echo State Network (ESN) transforms a sequence through a fixed recurrent reservoir and trains only an output mapping \\cite{jaeger2001echo,lukosevicius2009reservoir}. This reduces optimisation cost compared with training all recurrent weights in an LSTM. Kumar's crude-oil study reports a mean absolute percentage error of 1.57\\% for reservoir computing compared with 27.69\\% for an LSTM, while training took approximately 1.1 seconds rather than 423 seconds \\cite{kumar2023reservoir}. Those results motivate an ESN for an interactive advisor that may need frequent retraining, although crude oil is not equivalent to equities and the result cannot be transferred without testing.
+
+Reservoir models also have limitations. A fixed reservoir can lag a structural break, and performance depends on input scaling, washout length, spectral radius, reservoir size and regularisation. The approach is often demonstrated on a single series, whereas a portfolio advisor must compare several assets and convert forecasts into allocations. The final project addresses these limits by providing a deterministic NumPy ESN and an optional ReservoirPy backend, fitting preprocessing on training rows only, evaluating chronologically and retaining last-close and moving-average baselines. This makes computational efficiency useful without claiming that ESNs solve regime change.
+
+\\section{Deep reinforcement learning for portfolio management}
+Forecasting estimates what might happen; reinforcement learning (RL) models how an agent should act. Portfolio management can be represented as a Markov decision process. At time $t$, the state contains recent market observations and current holdings, the action is a target allocation, and the reward is the subsequent portfolio outcome. This formulation is attractive because it can optimise a sequence of decisions rather than a single prediction.
+
+Jiang, Olmo and Atwi study a risk-aware TD3 portfolio-selection method that incorporates investor constraints and transaction costs into a utility inspired by mean-variance optimisation \\cite{jiang2024td3}. They report annualised returns approaching 42\\% and Sharpe ratios above 1.4 in their experimental setting. TD3 is suited to continuous actions and reduces some instability associated with standard deterministic policy gradients, but it still depends on realistic environments, reward design and careful tuning.
+
+Liu et al. present a DDPG framework for trading a 30-stock Dow Jones universe \\cite{liu2022ddpg}. DDPG can produce fine-grained continuous allocations and their study reports an annualised return of 25.87\\% and a Sharpe ratio of 1.79. Comparisons across studies remain difficult because datasets, transaction costs, action conventions and test periods differ. A high return in one historical interval does not establish robustness.
+
+The final project selects an A2C portfolio-allocation path from FinRL rather than maintaining several competing RL implementations. The selected artifact uses chronological train, validation and test partitions, a rolling-return observation schema, an explicit cash action and a net-log-return reward after costs. Equal weight, buy and hold and forecast-ranked allocation remain necessary controls. They show whether the learned policy adds value beyond transparent alternatives and expose cases where a responsive strategy produces more turnover without better risk-adjusted performance.
+
+\\section{Financial data infrastructure and reproducibility}
+Algorithmic improvements are not sufficient if data preparation and evaluation are inconsistent. FinRL-Meta frames financial RL as a data and operations problem: ingestion, cleaning, feature engineering, environment construction and benchmarking must be coordinated \\cite{finrlmeta}. Its environments cover stock trading, portfolio management and other tasks and support technical, fundamental, sentiment and alternative features. Dynamic FinRL data pipelines extend this idea with rolling training, testing and trading windows so that a policy can adapt as new observations arrive \\cite{dynamicfinrl}.
+
+These systems expose two important issues. First, a result is not reproducible if the data version, ticker universe, preprocessing or cost assumptions are unknown. Second, a random train-test split is inappropriate when future observations influence decisions. The final project adopts these principles without attempting to reproduce a complete RLOps platform. It validates canonical OHLCV data, records a dataset digest, stores artifact metadata, uses chronological partitions and refuses incompatible policy inputs. Live continuous learning remains future work because the available tracked dataset ends in 2021.
+
+\\section{Multimodal financial prediction}
+Historical prices do not contain all information that moves markets. News, social media, macroeconomic events and corporate announcements can create rapid changes that a price-only model sees only after the event. StockNet combines tweets and historical price movements in a variational recurrent model for binary stock-movement prediction \\cite{stocknet}. It reports 58.2\\% accuracy and improved Matthews correlation compared with several price-only and neural baselines.
+
+StockNet demonstrates the potential value of cross-modal signals, but it does not solve portfolio construction. An up/down prediction does not determine position size, cash, turnover or risk. Text also introduces timestamp alignment, source quality, sentiment drift and additional reproducibility concerns. The final MVP therefore uses validated price data and records multimodal news and sentiment as possible extensions rather than implemented functionality.
+
+\\section{Agentic and natural-language interfaces}
+The template requires a non-technical user to interact with the advisor and receive explanations. Smolagents provides a lightweight tool-using agent framework, while Qwen3 provides a local language model option \\cite{smolagents,qwen}. A language model can translate allocations and metrics into accessible prose, but an unrestricted model may invent prices, misidentify tickers or imply certainty that is not present in the quantitative output.
+
+The final design places language generation after the quantitative service. Qwen receives a narrow, read-only facts tool containing validated forecasts, allocations, dates, warnings and historical metrics. It cannot fetch files, call the market-data provider, calculate a return or modify a weight. Generated numeric claims are checked against the supplied context. Empty output, unsupported claims, timeouts or unavailable dependencies use a deterministic template. This is less flexible than an unrestricted chatbot, but it preserves faithfulness and keeps the application functional offline.
+
+\\section{Comparative analysis and research gaps}
+The reviewed work covers complementary but separate outputs. Reservoir computing targets efficient prediction; TD3, DDPG and A2C target sequential allocation; FinRL-Meta targets benchmark infrastructure; StockNet targets multimodal movement prediction; and language models target user interaction. Several gaps remain:
+
+\\begin{enumerate}
+\\item \\textbf{Forecasting versus decision-making:} many studies optimise prediction error or trading return separately, without testing how forecasts affect constrained portfolio weights.
+\\item \\textbf{Reproducibility:} results often depend on non-standard data, undocumented preprocessing, changing universes or omitted transaction costs.
+\\item \\textbf{Explainability:} high-performing policies rarely explain why a weight changed in terms a retail investor can inspect.
+\\item \\textbf{Regime robustness:} a single historical period cannot establish performance across market conditions.
+\\item \\textbf{Deployment:} research notebooks frequently omit failure handling, model-version checks and a usable interface.
+\\end{enumerate}
+
+The contribution of this project is an integrated and testable vertical slice addressing these gaps at MVP scale. It connects validated data, forecasting, portfolio policies, cost-aware backtesting and grounded explanation through one service boundary. It also makes negative evidence visible: the ESN is compared with last close, forecast-ranked allocation is compared with simple portfolios, and the missing 2025 experiment is reported instead of replaced with an unsupported claim.
+
+\\section{Relevance to the final implementation}
+The literature supports a layered design rather than an end-to-end autonomous trader. The ESN provides an efficient experimental forecaster, but the application retains simple baselines. FinRL provides a technically challenging policy-learning path, but metadata and chronological boundaries control its use. Smolagents and Qwen improve accessibility, but the quantitative service remains the source of truth. This separation allows the final report to evaluate each component and the complete workflow without confusing fluent language with financial validity.

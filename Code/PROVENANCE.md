@@ -8,15 +8,15 @@ service and its saved artifacts.
 | Source | Classification | Unified use | Provenance note |
 | --- | --- | --- | --- |
 | `FinRLRCModel.ipynb` | Exploration | `advisor.forecasting` ESN backends and evaluation | Research starting point; production code was reimplemented with explicit training-only scaling. |
-| `FinRLRC_indicators_testbed.ipynb` | Exploration | Candidate feature ideas | Not currently in the production observation schema; requires separate leakage review. |
+| `FinRLRC_indicators_testbed.ipynb` | Exploration | Candidate feature ideas | Reviewed; indicators remain outside the production observation schema because the approved FinRL contract uses rolling returns and current weights. |
 | `FinRL/FinRL_PortfolioAllocation_NeurIPS_2020.ipynb` | Upstream example adapted | Selected A2C policy contract | Source for the portfolio direction; production environment, cash action, costs, metadata, and chronological splits are implemented locally. |
 | `FinRL/*.ipynb` other variants | Upstream examples | Reference only | Not in the production path because their action spaces do not match the MVP target-weight contract. |
 | `portfolio_demo.ipynb` | Exploration/presentation | Shiny Portfolio and Evaluation views | Presentation concepts were reimplemented in the service-driven UI. |
 | `LLM.ipynb`, `LLM_demo.ipynb` | Exploration | Optional Qwen/Smolagents explanation layer | `LLM_demo.ipynb` is the rough reference: Qwen, a `fetch_latest_data` tool, direct chat history, and CodeAgent. Production keeps the Qwen/Smolagents behavior but restricts the model to validated advisor facts and rejects raw tool/JSON payloads. |
-| `LSTM vs. RC/simulation.ipynb` | Exploration | Optional benchmark evidence | Not a production model; claims require reproducible saved evaluation. |
+| `LSTM vs. RC/simulation.ipynb` | Exploration | Optional benchmark evidence | Reviewed; retained as research only because it has no saved artifact integrated into the service contract. |
 | `stock-app/app-express.py` | Original application | Unified Python Shiny app | Existing Shiny library and interaction style retained; direct Yahoo logic replaced by `AdvisorService`. |
 | `stock-app/app-core.py` | Duplicate application | Retire after parity review | Kept for provenance until final smoke coverage confirms the Express app is the single entry point. |
-| `Untitled.ipynb` | Unclassified | None | Must be reviewed before any production reuse. |
+| `Untitled.ipynb` | Unclassified experiment | None | Reviewed; no production dependency or final quantitative claim uses it. |
 | `LSTM vs. RC/.ipynb_checkpoints`, `FinRL/.ipynb_checkpoints`, `.ipynb_checkpoints` | Generated notebook checkpoints | None | Ignored/generated artifacts; not evidence. |
 
 ## Original versus adapted code

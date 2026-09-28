@@ -554,16 +554,12 @@ Status: core requirements satisfied; delivery/UI gaps remain
   FinRL A2C training/evaluation on the available legacy period, and grounded
   deterministic or local Qwen/Smolagents explanations.
 - The Python Shiny application provides the required non-technical workflow;
-  51 tests pass in `CM3070-FP`, and saved evaluation artifacts provide evidence
+  55 tests pass in `CM3070-FP`, and saved evaluation artifacts provide evidence
   for the advice-generation workflow.
-- The production app still uses the dependency-light LastClose forecast and
-  equal-weight allocation by default. FinRL is currently an approved,
-  inference-capable offline artifact and held-out comparison, not yet a
-  selectable app strategy.
-- The app Evaluation view currently exposes the service backtest result rather
-  than the complete saved FinRL-versus-baselines comparison. This is a
-  remaining integration task, alongside the responsive Summary/Evaluation
-  layout fix and final report figures.
+- The production app now uses forecast-ranked allocation by default and offers
+  the approved FinRL A2C artifact as a selectable five-stock inference path.
+- The Evaluation view shows service metrics and a cumulative-return chart;
+  saved legacy comparison files remain the report evidence source.
 
 ### Responsive Summary and Evaluation layout (2026-09-28)
 
@@ -723,3 +719,24 @@ Verification:
 - The provenance inventory is tracked and linked from the unification work.
 - Offline service, explanation, policy, data, and Shiny tests remain the next
   verification gate after this change.
+
+### Final offline delivery and presentation package (2026-09-28)
+
+Status: complete for available data
+
+- Added dual strategy support to `AdvisorService`: forecast allocators use
+  `allocate()`, while approved FinRL adapters use `target_weights()` with the
+  exact saved observation contract.
+- Added a selectable **FinRL A2C (legacy artifact)** option to the Shiny app.
+  It is restricted to the exact five-stock MVP universe and loads inference
+  lazily; training is never exposed through the UI.
+- Added an Evaluation cumulative-return chart and retained equal-weight and
+  forecast-ranked metrics as benchmarks.
+- Added `Code/FINAL_REPORT_EVIDENCE.md` with artifact-backed results and
+  limitations, `Code/PRESENTATION_PLAN.md` with a timed 3–5 minute script, and
+  a reproducibility checklist in `Code/advisor/README.md`.
+- Reviewed and reconciled technical-indicator, LSTM/RC, Untitled, and rough
+  LLM notebook provenance. Added a Windows CI workflow for compilation and
+  offline tests.
+- Verification: 55 offline tests pass, production modules compile, and the
+  restarted Shiny app returns HTTP 200 with the FinRL selector present.

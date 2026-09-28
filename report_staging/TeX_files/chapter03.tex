@@ -11,3 +11,13 @@ The last-close model is the forecast baseline. The ESN uses scaled features, a f
 
 \section{Verification}
 The backtester exposes only observations available at each decision date, charges costs when weights change and records returns, weights, drawdown and turnover. Unit tests cover data, forecasting, allocations, policy contracts, metrics, explanation grounding and UI smoke behaviour. Integration tests run from a fixed fixture without network or an LLM.
+\section{Detailed portfolio formulation}
+At date $t$, the policy receives recent returns, the current portfolio and an explicit ticker ordering. It returns a target vector $w_t=(w_{1,t},\ldots,w_{n,t},w_{cash,t})$, with non-negative components summing to one. The target is applied to subsequent returns, while changes from the previous target incur transaction costs and slippage. The FinRL reward is a scaled net log return. This makes cash explicit and prevents missing observations from being treated as investable assets.
+
+The forecast-ranked policy is intentionally simpler. It computes a moving-average return estimate, ranks selected stocks, invests in the highest-ranked candidates and applies the selected risk profile's cash floor. Equal weight and buy and hold remain visible as transparent benchmarks. This separation lets the evaluation distinguish forecast quality, policy complexity and risk control.
+
+\section{Data lifecycle and provenance}
+The data lifecycle has four states: source, prepared, evaluated and displayed. Source data may come from Yahoo or a tracked CSV. Prepared data pass schema checks and receive a digest. Evaluation scripts record interval, seeds, costs and configuration. Displayed results carry data date, model version and dataset version into the Summary view. The lifecycle ensures that a number shown in the interface can be traced back to a named data artifact.
+
+\section{User workflow and trade-offs}
+The intended workflow is to select stocks, choose a risk profile and date, inspect the latest close and chart, run analysis, review forecasts and weights, compare historical metrics and ask a grounded question. A local language model improves accessibility but can be unavailable, so it is optional. A richer FinRL strategy may produce high historical returns but is harder to validate in the live app, so the production path remains dependency-light. A five-stock training universe supports reproducibility while the Market Data tab can display the wider tracked Dow dataset.

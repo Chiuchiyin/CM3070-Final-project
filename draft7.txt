@@ -1,0 +1,1236 @@
+Agentic Financial Advisor Bot for
+Investment Strategies
+Preliminary report
+
+
+
+
+                           University of London
+                           CM3070 Final Project
+a
+Abstract
+
+Naviga ng the ﬁnancial market is increasingly diﬃcult due to inherent vola lity and the
+sheer volume of high-dimensional data. This report details the development of an Agen c
+Financial Advisor Bot designed to democra ze access to transparent, personalized
+investment strategies. Our system orchestrates real- me data inges on with reservoir
+compu ng for eﬃcient forecas ng and deep reinforcement learning (FinRL) for decision-
+making. By integra ng the Qwen3 language model within the Smolagents framework, the
+bot oﬀers a modular, explainable, and conversa onal interface. Through backtes ng and user
+evalua on, we demonstrate how this architecture can enhance both investment outcomes
+and user trust, providing retail investors with accessible, intelligent ﬁnancial guidance.
+
+
+
+
+                                                                                        b
+c
+Contents
+1.     Introduc on ........................................................................................................................ 1
+2.     Project Framework ............................................................................................................. 2
+3.     Mo va on .......................................................................................................................... 3
+4.     Literature Review................................................................................................................ 4
+     4.1.     Forecas ng Approaches ............................................................................................. 4
+     4.2.     Deep Reinforcement Learning in Trading ................................................................... 5
+       4.2.1.        TD3 for Por olio Op miza on ........................................................................... 5
+       4.2.2.        DDPG for Stock Trading ...................................................................................... 5
+     4.3.     Benchmarking and Data Environments ...................................................................... 6
+       4.3.1.        FinRL-Meta: Modular Environments and Benchmarks ...................................... 6
+       4.3.2.        Dynamic Datasets for Con nual FinRL Training.................................................. 6
+     4.4.     Mul modal Learning for Movement Predic on ........................................................ 7
+     4.5.     Compara ve Analysis and Research Gaps .................................................................. 8
+       4.5.1.        Compara ve Overview ....................................................................................... 8
+       4.5.2.        Research Gaps and Open Ques ons .................................................................. 8
+     4.6.     Conclusion .................................................................................................................. 9
+5.     Project Design................................................................................................................... 11
+     5.1.     Domain and Users .................................................................................................... 11
+     5.2.     Design Jus ﬁca on ................................................................................................... 11
+     5.3.     Project Structure ...................................................................................................... 12
+     5.4.     Technologies and Methods ...................................................................................... 14
+     5.5.     Work Plan ................................................................................................................. 15
+     5.6.     Evalua on Plan ......................................................................................................... 17
+     5.7.     Con ngency Plan ...................................................................................................... 18
+6.     Feature Prototype ............................................................................................................ 20
+     6.1.     Forecas ng with Reservoir Compu ng .................................................................... 20
+     6.2.     Reinforcement Learning with FinRL ......................................................................... 22
+     6.3.     Natural Language Output with Smolagents + Qwen3 .............................................. 25
+     6.4.     Limita ons and Planned Enhancements .................................................................. 26
+7.     Conclusion ........................................................................................................................ 28
+8.     References ........................................................................................................................ 29
+
+                                                                                                                                           d
+e
+1. Introduc on
+Financial markets operate as highly dynamic and vola le systems, where low signal-to-noise
+ra os and non-sta onary signals complicate predic ve accuracy. Conven onal
+methodologies, such as ARIMA and linear regression, o en fail to address the non-linear
+complexi es and adap ve requirements of modern trading environments. To address these
+limita ons, this report introduces an Agen c Financial Advisor Bot. By synthesizing predic ve
+modeling, reinforcement learning, and natural language processing, the pla orm facilitates
+ac ve por olio management, priori zing explainability, transparency, and accessible
+investment guidance.
+
+
+
+
+                                                                                            1
+2. Project Framework
+This project, developed as an extension of the Financial Advisor Bot template, focuses on the
+implementa on of an ac ve por olio management system. It leverages a modular, agen c
+architecture to navigate the inherent vola lity and non-sta onarity of ﬁnancial markets by
+orchestra ng real- me data, temporal forecas ng, and reinforcement learning.
+
+The system is constructed using the following core components:
+
+      Data Sources: The bot sources live market data via integra on with Yahoo Finance,
+       Bloomberg API, and CCXT to ensure access to high-ﬁdelity, real- me informa on.
+
+      Predic ve Models: To address the challenge of non-linear market pa erns, the
+       system employs Reservoir Compu ng (speciﬁcally Echo State Networks) [12][13][14].
+       This approach provides a computa onally eﬃcient method for processing me-series
+       data, as it u lizes a ﬁxed, high-dimensional dynamical reservoir—requiring only the
+       output weights to be trained. This allows for rapid, lightweight adapta on to
+       changing market condi ons compared to tradi onal deep RNNs.
+
+      Reinforcement Learning Environment: The FinRL framework [1] serves as the
+       primary engine for por olio op miza on and strategic asset alloca on, u lizing deep
+       reinforcement learning to balance risk and return dynamically.
+
+      Language Models: To bridge the gap between technical output and user accessibility,
+       the Qwen3 model generates human-readable explana ons, providing transparency
+       regarding the ra onale behind investment decisions.
+
+      Agen c Framework: Built on the Smolagents [2] library, the system u lizes a
+       minimalist agen c framework to interpret user instruc ons, manage tool execu on,
+       and coordinate communica on between the forecas ng models and the decision
+       engine.
+
+      Evalua on: Performance is veriﬁed through rigorous backtes ng against historical
+       data, ensuring that both the forecas ng accuracy and the por olio strategies meet
+       robust success criteria.
+
+This integrated pipeline enables the bot to process complex ﬁnancial inputs, execute
+intelligent strategies, and provide clear, conversa onal guidance to retail investors,
+maintaining a balance between high-performance algorithmic execu on and explainable,
+user-centric interac on.
+
+
+
+
+                                                                                            2
+3. Mo va on
+Individual investors frequently encounter signiﬁcant structural impediments that hinder
+eﬀec ve ﬁnancial decision-making. These barriers include:
+
+      Informa on Asymmetry and Satura on: The overwhelming volume of real- me
+       market data creates a barrier to eﬀec ve analysis, making it diﬃcult for retail
+       investors to derive ac onable insights.
+
+      Prohibi ve Advisory Costs: Professional ﬁnancial management remains largely
+       inaccessible to non-ins tu onal investors, par cularly those with limited capital.
+
+      Algorithmic Opacity and Passive Design: Exis ng retail-facing pla orms o en lack
+       genuine personaliza on, oﬀering sta c strategies and failing to provide the
+       transparency necessary to explain the logic behind investment recommenda ons.
+
+To mi gate these challenges, this project proposes an intelligent, agen c system capable of
+ac ve por olio management. By priori zing modularity, explainability, and adaptability, this
+solu on aims to democra ze sophis cated ﬁnancial strategy, providing investors with
+trustworthy and transparent decision support.
+
+
+
+
+                                                                                               3
+4. Literature Review
+The rapid advancement of deep learning and reinforcement learning (RL) has fundamentally
+reshaped ﬁnancial forecas ng and trading automa on. These paradigms oﬀer sophis cated
+capabili es for modeling complex temporal dependencies, facilita ng online adapta on, and
+integra ng high-dimensional, mul modal data—ranging from high-frequency price feeds to
+unstructured social sen ment. This review synthesizes six seminal works across three
+primary domains of ﬁnancial AI:
+
+   1. Time series forecas ng using lightweight RNN architectures.
+
+   2. Por olio management and trading using deep reinforcement learning.
+
+   3. Data-centric and benchmark-driven pla orms for developing and evalua ng ﬁnancial
+      AI agents.
+
+Together, these works represent the convergence of model innova on, infrastructure
+development, and data integra on, se ng the stage for robust, adap ve, and scalable
+ﬁnancial decision-making systems.
+
+4.1. Forecas ng Approaches
+Tradi onal me series forecas ng in ﬁnance has heavily relied on sta s cal models such as
+ARIMA, which assume linearity and sta onarity—assump ons frequently violated in real-
+world ﬁnancial data. In response, researchers have inves gated machine learning-based
+alterna ves that can capture non-linear dependencies and be er accommodate the
+stochas c nature of asset prices.
+
+A notable contribu on in this space is the applica on of Reservoir Compu ng (RC),
+par cularly Echo State Networks (ESNs), for ﬁnancial forecas ng. Kumar [3] demonstrates
+that RC can outperform deep learning models such as Long Short-Term Memory (LSTM)
+networks in both predic ve accuracy and computa onal eﬃciency. Unlike LSTMs, which
+require extensive training of recurrent connec ons, ESNs leverage a randomly ini alised
+dynamic reservoir and train only the output weights—making them signiﬁcantly more
+lightweight.
+
+In Kumar's study [3], models were evaluated using daily crude oil prices from 2010 to 2023.
+The RC model achieved a mean absolute percentage error (MAPE) of 1.57%, signiﬁcantly
+outperforming LSTM, which produced a MAPE of 27.69%. Addi onally, the ESN completed
+training in 1.1 seconds, compared to LSTM’s 423 seconds. Although the study focuses on
+crude oil, the underlying price dynamics share characteris cs with equity markets, making
+the results highly relevant for stock forecas ng.
+
+While RC models oﬀer advantages in terms of speed and accuracy, they are primarily suited
+to univariate forecas ng tasks. Their adaptability to mul variate or mul modal ﬁnancial data
+
+
+                                                                                              4
+remains limited. Nevertheless, they provide a strong, interpretable baseline in scenarios that
+demand fast, resource-eﬃcient predic ons.
+
+4.2. Deep Reinforcement Learning in Trading
+While forecas ng models aim to predict future prices or asset movements, reinforcement
+learning (RL) oﬀers a more ac on-oriented framework—enabling agents to learn strategies
+that maximise long-term returns. In ﬁnancial contexts, RL has been widely applied to
+por olio op misa on, asset alloca on, and automated trading. Two prominent algorithms—
+Twin Delayed Deep Determinis c Policy Gradient (TD3) and Deep Determinis c Policy
+Gradient (DDPG)—are examined in the literature, oﬀering complementary insights into
+prac cal RL-based trading.
+
+4.2.1. TD3 for Por olio Op miza on
+In their study on por olio selec on, Jiang et al. [4] propose an enhanced TD3 model that
+incorporates investor-speciﬁc constraints such as risk aversion and transac on costs. The
+agent is trained to op mise a u lity func on inspired by Markowitz’s mean-variance theory
+while interac ng with a simulated environment based on DJIA and S&P100 cons tuents.
+
+Empirical results show that the TD3 agent achieves annualised returns of up to 42% and
+Sharpe ra os exceeding 1.4, outperforming both tradi onal por olio strategies (e.g.,
+minimum-variance por olios) and DRL baselines such as PPO and standard DDPG. The TD3
+model is especially eﬀec ve in high-dimensional asset spaces, where conven onal
+op misa on techniques o en falter due to noise and overﬁ ng.
+
+4.2.2. DDPG for Stock Trading
+In a complementary study, Liu et al. [5] present a prac cal DDPG-based trading framework.
+The agent learns con nuously while interac ng with an environment composed of 30 DJIA
+stocks, using historical data from 2009 to 2018. The objec ve is to maximise cumula ve
+por olio value while adap ng to market dynamics.
+
+The DDPG agent signiﬁcantly outperforms both the DJIA index and a minimum-variance
+benchmark, achieving an annualised return of 25.87% and a Sharpe ra o of 1.79. A key
+advantage of DDPG lies in its ability to operate within con nuous ac on spaces, enabling
+ﬁne-grained control over asset alloca ons.
+
+
+
+Together, these studies illustrate the growing maturity of deep RL in ﬁnancial applica ons.
+While DDPG excels in online, single-agent trading scenarios, TD3 is par cularly well-suited to
+risk-aware por olio management. Both approaches highlight the importance of reward
+shaping, training stability, and realis c simula on environments in the successful deployment
+of ﬁnancial RL agents.
+
+
+
+                                                                                             5
+4.3. Benchmarking and Data Environments
+While algorithmic advances in ﬁnancial reinforcement learning (FinRL) are promising, they
+are o en evaluated on non-standard datasets or within custom environments, making
+comparability and reproducibility diﬃcult. Two recent contribu ons address this gap by
+introducing benchmarking pla orms and dynamic data pipelines that enable realis c and
+standardised evalua on of FinRL models.
+
+4.3.1. FinRL-Meta: Modular Environments and Benchmarks
+In FinRL-Meta: Market Environments and Benchmarks for Data-Driven Financial
+Reinforcement Learning, Liu et al. [6] introduce a comprehensive RLOps pla orm that
+automates the end-to-end process of building and evalua ng FinRL agents. FinRL-Meta
+supports a wide range of ﬁnancial tasks—including stock trading, por olio management, and
+mul -agent liquida on—implemented as OpenAI Gym-style environments.
+
+The pla orm leverages the DataOps paradigm to automate data inges on, cleaning, feature
+engineering, and simula on setup. It supports a variety of ﬁnancial markets (stocks, ETFs,
+crypto, forex) and integrates mul ple data modali es, including technical, fundamental,
+sen ment, and alterna ve features (e.g., ESG, patents, social media).
+
+Cri cally, FinRL-Meta reproduces benchmarks for popular DRL algorithms such as DDPG,
+PPO, and A2C, oﬀering reproducible baselines for both academic and industrial applica ons.
+Ensemble methods further boost performance; for example, ensemble-PPO+A2C+DDPG
+achieves a Sharpe ra o of 1.53, outperforming individual agents and tradi onal index
+strategies.
+
+4.3.2. Dynamic Datasets for Con nual FinRL Training
+Extending FinRL-Meta, Liu et al. [7] address the limita ons of sta c datasets in RL training by
+proposing a dynamic data pipeline that enables con nual learning. Sta c datasets o en lead
+to overﬁ ng and limited generalisa on. This framework introduces a rolling-window
+training-tes ng-trading pipeline, allowing agents to adapt incrementally as new data
+becomes available.
+
+The system supports real- me data inges on from over 30 ﬁnancial sources and is
+compa ble with major RL libraries such as Stable-Baselines3, RLlib, and ElegantRL. It also
+integrates with paper trading services (e.g., Alpaca) to support minute-level simula on.
+
+This dynamic pipeline enhances realism, reduces survivorship bias, and enables curriculum
+learning by gradually increasing task complexity. Experiments show that ensemble agents
+consistently outperform single-policy models and tradi onal ﬁnancial benchmarks in this
+framework.
+
+
+
+
+                                                                                              6
+Together, these two contribu ons mark a shi from isolated model development to full-stack
+infrastructure in FinRL—enabling robust pipelines, standardised benchmarks, and scalable
+simula on environments. Such system-level thinking is essen al for bridging the gap
+between simula on and real-world deployment in ﬁnancial AI.
+
+4.4. Mul modal Learning for Movement Predic on
+In ﬁnancial markets, asset movements are o en inﬂuenced by unstructured external signals
+such as breaking news, investor sen ment, and public discourse on social media. While
+price-based models capture historical pa erns, they frequently miss real- me reac ons to
+such external events. To address this limita on, researchers have turned to mul modal
+learning, integra ng textual and numerical data for improved predic ve performance.
+
+A pioneering contribu on in this domain is the work by Xu and Cohen [8], who introduce
+StockNet, a deep varia onal genera ve model that fuses tweets and historical price data to
+predict binary stock movements (up/down).
+
+Unlike tradi onal discrimina ve models, StockNet learns latent market dynamics using
+recurrent, con nuous latent variables trained via varia onal inference. The model comprises
+three main components:
+
+   1. A Market Informa on Encoder that processes tweet embeddings and historical price
+      changes,
+
+   2. A Varia onal Movement Decoder that models stochas c dependencies,
+
+   3. An A en ve Temporal Auxiliary module that incorporates prior movement
+      predic ons to enhance temporal coherence.
+
+The model is trained on a dataset covering 88 U.S. stocks from 2014 to 2016, using Twi er
+messages and Yahoo Finance price data. It achieves a predic on accuracy of 58.2%,
+outperforming several baselines—including ARIMA, random forests, and neural NLP models
+such as the Hierarchical A en on Network (HAN). Notably, StockNet also achieves a higher
+Ma hews Correla on Coeﬃcient (MCC), indica ng greater robustness in imbalanced
+predic on tasks.
+
+StockNet's performance highlights the value of combining social sen ment with technical
+indicators. It also demonstrates that deep genera ve models—tradi onally applied in
+language modelling—can eﬀec vely capture the uncertainty and vola lity inherent in
+ﬁnancial markets.
+
+However, the model focuses solely on binary movement predic on and does not address
+por olio-level op misa on or capital alloca on. Nonetheless, it lays a founda on for future
+FinRL agents that incorporate mul modal market signals into their policy learning.
+
+
+
+
+                                                                                              7
+4.5. Compara ve Analysis and Research Gaps
+The six reviewed papers cover a broad and complementary range of ﬁnancial AI research—
+from forecas ng and trading strategies to infrastructure and data integra on. Collec vely,
+they illustrate how modern techniques in deep learning, reinforcement learning, and
+genera ve modelling are transforming the way we approach ﬁnancial predic on and
+decision-making.
+
+4.5.1. Compara ve Overview
+Category         Paper(s)          Key Strengths                  Limita ons
+
+                 Reservoir         High accuracy, low latency,    Single-asset only; no
+Forecas ng
+                 Compu ng [3]      simple implementa on           adap ve learning
+
+                                   Op mised capital alloca on,
+               DDPG [5], TD3                                      Require careful tuning;
+Trading Agents                     risk sensi vity, outperform
+               [4]                                                sensi ve to data realism
+                                   tradi onal methods
+
+                 FinRL-Meta [6],   Reproducibility, modularity, Require computa onal
+Infrastructure   Dynamic           live data support, benchmark infrastructure; steep
+                 Datasets [7]      environments                 learning curve
+
+                                   Incorporates sen ment &
+Mul modal                                                         Binary-only predic on,
+                 StockNet [8]      price, genera ve model with
+Modelling                                                         not integrated with RL
+                                   temporal structure
+
+
+
+These approaches vary in their scope (single asset vs. mul -asset por olio), output type
+(predic on vs. policy), and data modali es (price history, sen ment, fundamental signals).
+Yet they all converge on the broader need for ﬁnancial AI systems that are more robust,
+adap ve, and explainable—capable of handling real-world complexity with transparency and
+reliability.
+
+
+
+4.5.2. Research Gaps and Open Ques ons
+Based on the compara ve synthesis, several key research gaps emerge:
+
+      Hybrid Modelling: Most models emphasise either forecas ng (e.g., RC [3], StockNet
+       [8]) or decision-making (e.g., TD3 [4], DDPG [5]). Bridging the two—such as
+       integra ng StockNet-like sen ment encoders into RL agents—remains largely
+       unexplored.
+
+
+
+                                                                                             8
+      Explainability: Despite promising performance, the reviewed models generally lack
+       interpretability. In ﬁnance, black-box systems face resistance due to regulatory,
+       ethical, and ﬁduciary concerns. Future work should priori se explainable
+       reinforcement learning and feature a ribu on methods.
+
+      Mul -Agent Systems: Financial markets are inherently mul -agent environments.
+       However, most reviewed studies adopt single-agent frameworks. Extending these
+       models to compe ve or coopera ve mul -agent RL se ngs could oﬀer more
+       realis c and robust simula ons of market behaviour.
+
+      Cross-Modal Reasoning: StockNet [8] highlights the value of integra ng social
+       sen ment with price data. Expanding this approach to include addi onal modali es—
+       such as ﬁnancial news, macroeconomic indicators, ESG scores, or patent ac vity—
+       could enhance robustness and signal diversity.
+
+      Real-Time Deployment and RLOps: Although recent works address data pipelines and
+       benchmarks [6], [7], few models are deployed in live markets or evaluated in
+       produc on environments. Bridging the gap between research prototypes and real-
+        me, scalable systems remains a major challenge in ﬁnancial AI.
+
+
+
+These research gaps highlight promising direc ons for advancing ﬁnancial AI systems that are
+not only accurate, but also robust, transparent, and suitable for real-world deployment.
+
+4.6. Conclusion
+This literature review has examined six inﬂuen al contribu ons at the intersec on of deep
+learning, reinforcement learning, and ﬁnancial predic on. These works illustrate major
+progress across three key fronts:
+
+   1. Forecas ng innova ons: Reservoir Compu ng [3] oﬀers eﬃcient alterna ves to deep
+      models such as LSTM, enabling fast and accurate univariate asset predic on.
+
+   2. Reinforcement learning for decision-making: Methods like TD3 [4] and DDPG [5]
+      demonstrate the capacity of AI agents to make risk-aware por olio decisions and
+      outperform tradi onal baselines.
+
+   3. Data-centric and infrastructure advancements: Pla orms such as FinRL-Meta [6] and
+      dynamic data pipelines [7] are advancing reproducibility, standardisa on, and
+      readiness for real- me deployment.
+
+In addi on, the integra on of mul modal data sources, as pioneered by StockNet [8],
+demonstrates the growing importance of combining sen ment and numerical indicators to
+be er capture market behaviour.
+
+Despite these advancements, important challenges remain—par cularly in model
+explainability, con nual adapta on, and the development of hybrid systems that can both
+                                                                                            9
+predict and act. Future research should aim to bridge these gaps through cross-disciplinary
+approaches that combine robust machine learning techniques with domain exper se in
+ﬁnance.
+
+As the ﬁeld con nues to evolve, we move closer to building adap ve, transparent, and
+trustworthy AI systems capable of naviga ng the complexity and vola lity of modern
+ﬁnancial markets.
+
+
+
+
+                                                                                              10
+5. Project Design
+The Agen c Financial Advisor Bot is an AI-driven system designed to deliver intelligent,
+explainable, and adap ve ﬁnancial advice to investors. It integrates real- me market data
+processing, predic ve modelling, reinforcement learning, and natural language genera on to
+produce clear and ac onable investment strategies.
+
+The system supports natural, conversa onal interac on, enabling users to engage with the
+bot using plain English. In return, the bot provides customised investment guidance while
+maintaining transparency and user control. By combining modular AI components with a
+language-driven interface, the design aims to bridge the gap between algorithmic decision-
+making and user-centred ﬁnancial planning.
+
+5.1. Domain and Users
+Domain: Financial technology and personal investment advisory.
+
+Users:
+
+        Retail investors seeking low-cost, accessible investment advice.
+
+        Beginner investors overwhelmed by data and lacking ﬁnancial exper se.
+
+        Users looking for a transparent alterna ve to black-box robo-advisors.
+
+This project addresses the intersec on of personal ﬁnance and ar ﬁcial intelligence by
+providing an intelligent interface for users to manage their investments more ac vely and
+conﬁdently. For example, a 29-year-old retail investor using pla orms like Robinhood may
+beneﬁt from personalised, transparent, and cost-eﬀec ve advice without the fees associated
+with tradi onal ﬁnancial advisors.
+
+5.2. Design Jus ﬁca on
+The project is designed to address three main user challenges:
+
+        Informa on Overload: Users are bombarded with excessive and o en conﬂic ng
+         ﬁnancial informa on.
+
+        Advisor Costs: Tradi onal ﬁnancial advisors remain unaﬀordable for many retail
+         investors.
+
+        Lack of Adaptability in Tools: Most exis ng tools are passive and lack explainability.
+
+The system design—comprising real- me data integra on, me-series forecas ng,
+reinforcement learning for strategy selec on, and natural language genera on—is directly
+aligned with these user needs. The use of an agen c framework ensures adaptability and
+interpretability, while integra on with public APIs and large language models (LLMs)
+enhances accessibility and transparency. Each component was selected to op mise for
+modularity, responsiveness, and explainability.
+                                                                                              11
+5.3. Project Structure
+The system is designed as a modular, agen c pipeline consis ng of six core components.
+Each module handles a speciﬁc func on in the forecas ng, decision-making, and
+communica on process:
+
+1. Percep on:
+
+      Retrieves and preprocesses live or historical ﬁnancial data using APIs such as Yahoo
+       Finance. This includes normaliza on, resampling, and feature engineering to prepare
+       the input for downstream models.
+
+2. Reasoning:
+
+      Applies predic ve models—such as Reservoir Compu ng (RC)—to forecast short-term
+       price movements or trends based on recent market behaviour.
+
+3. Ac on Selec on:
+
+      Uses reinforcement learning, implemented via the FinRL framework, to determine
+       op mal por olio alloca ons based on predicted market condi ons and observed
+       features.
+
+4. Natural Language Repor ng:
+
+      Converts technical outputs into user-facing, conversa onal explana ons using the
+       Qwen3 language model. This module provides transparency and improves
+       accessibility for non-expert users.
+
+5. Self-Evalua on:
+
+      Logs predic ons and ac ons for each episode and evaluates performance using
+       backtes ng tools such as pyfolio. This helps reﬁne policy model.
+
+6. Agen c Framework:
+
+      Smolagents is used to coordinate the components via natural language-based
+       func on calling. It enables ﬂexible orchestra on of forecas ng, strategy, and
+       repor ng modules in response to user queries.
+
+Control Flow and Interac on Design
+
+The bot operates in an agen c fashion:
+
+      The user interacts with the LLM interface (Qwen3), asking ques ons or reques ng
+       investment recommenda ons in natural language.
+
+      Smolagents parses the user intent and determines whether addi onal tools are
+       needed (e.g., fetching market data, genera ng forecasts, calling the RL policy).
+
+
+                                                                                          12
+      The required modules are then triggered in sequence. For example, a user asking
+       “What should I do with AAPL today?” results in:
+
+           o   pulling recent AAPL data (Percep on),
+
+           o   genera ng a predic on (Reasoning),
+
+           o   running the RL policy (Ac on),
+
+           o   and returning a human-readable recommenda on (Natural Language
+               Repor ng).
+
+
+
+
+                                      Figure 1. Control Flow
+
+This modular design supports interpretability, ﬂexibility, and extensibility—enabling future
+upgrades such as replacing the RC module with a Transformer-based model, or subs tu ng
+Qwen3 with another large language model (e.g., ChatGPT), without altering the core
+architecture.
+
+                                                                                           13
+In future itera ons, the agen c framework may be extended with user memory capabili es,
+allowing the system to retain contextual informa on such as por olio history, risk tolerance,
+and user-deﬁned investment goals across sessions. This would enable more personalised,
+context-aware recommenda ons aligned with the user’s long-term ﬁnancial behaviour.
+
+To support such func onality, s gmergic reinforcement learning [10] is being explored as a
+modular upgrade. As a decentralised RL paradigm, s gmergic learning enables independent
+agents to specialise and coordinate through a shared environment or memory layer. This
+architecture is well-suited to incorpora ng personalised strategies and dynamically adap ng
+to user-speciﬁc objec ves.
+
+Such an approach would support increased customisa on and responsiveness, par cularly in
+scenarios where user por olios fall outside the DOW30 index. Currently, the system is limited
+to DOW30 stocks and cannot dynamically adapt to index changes—such as the replacement
+of INTC with NVDA. A modular RL design, as oﬀered by s gmergic learning, could enhance
+system robustness and scalability across diverse asset universes.
+
+Addi onally, future versions will incorporate an automated retraining pipeline that
+periodically updates forecas ng and strategy models using the most recent market data. This
+is essen al in non-sta onary ﬁnancial environments, where model performance can degrade
+rapidly. Scheduled retraining ensures con nued model relevance and responsiveness to
+regime shi s or rare market events, without the need for manual retraining.
+
+5.4. Technologies and Methods
+      Reservoir Compu ng: The system u lizes Echo State Networks (ESN) [12][13][14 as a
+       form of Reservoir Compu ng, selected for its computa onal eﬃciency in me-series
+       forecas ng. Unlike deep RNNs that require extensive training of recurrent
+       connec ons, ESNs u lize a ﬁxed, high-dimensional reservoir, necessita ng training
+       only on the output weights. This architecture allows for rapid, lightweight adapta on
+       to non-linear market pa erns, providing a robust, resource-eﬃcient baseline for
+       vola le ﬁnancial environments.
+
+      FinRL [1]: The FinRL framework serves as the system's strategic engine, responsible
+       for automa ng por olio alloca on and decision-making. By modeling the trading
+       process as a Markov Decision Process (MDP), the system enables an intelligent agent
+       to observe complex market state data—such as technical indicators and price
+       history—and dynamically compute an op mal por olio weight vector. This
+       architecture shi s the strategy from rigid, rule-based execu on to a dynamic, policy-
+       driven framework that ac vely learns to balance risk and return in response to
+       evolving market condi ons.
+
+      Qwen3: The Qwen3 model func ons as the system’s natural language interface,
+       bridging the gap between technical algorithmic output and user accessibility. Its
+       primary role is to interpret and ar culate the results from the reasoning and ac on
+                                                                                             14
+       modules, conver ng quan ta ve data into human-readable, conversa onal
+       explana ons. By providing this transparency layer, the LLM mi gates the opacity
+       common in automated trading, fostering user trust and understanding.
+
+      Smolagents [2]: Smolagents acts as the system’s central orchestrator, responsible for
+       interpre ng user intent and managing the execu on of modular tools. It facilitates a
+       ﬂexible, agen c control ﬂow by mapping natural language queries to speciﬁc func on
+       calls—such as data inges on, forecas ng, or por olio strategy genera on. This design
+       enables a decoupled, modular architecture where individual components can be
+       upgraded or replaced without disrup ng the cohesive execu on pipeline.
+
+      Yahoo Finance, Bloomberg, CCXT APIs: Live ﬁnancial data.
+
+5.5. Work Plan
+To accelerate early development, simpler models such as Advantage Actor-Cri c (A2C) for
+reinforcement learning and standard Reservoir Compu ng (RC) for forecas ng are employed
+in the ini al prototype. However, these are not intended for the ﬁnal version. The system has
+been architected to support modular upgrades; future itera ons will incorporate more
+advanced components, such as DDPG or PPO for trading, and Next-Genera on Reservoir
+Compu ng (NG-RC) for forecas ng [9].
+
+As part of the reinforcement learning upgrade, the ﬁnal system may also integrate concepts
+from recent work on s gmergic mul -agent learning, par cularly mechanisms for
+decentralised coordina on and federated training. This direc on is inspired by Xu et al. [10]
+and is expected to improve robustness in por olio strategies under dynamic market
+condi ons.
+
+As part of technological update, Qwen has released visual model with may be used in the
+future upgrade.
+
+The following Gan chart outlines the planned phases of development. The primary
+objec ve is to deliver a working system pipeline by Week 12. Individual component tes ng is
+scheduled for Week 11. The coordinated system will use Smolagents to integrate RC-based
+forecasts, FinRL-generated por olio strategies, and Qwen3-based explana ons into a
+cohesive agen c feedback loop.
+
+
+
+
+                                                                                            15
+                                                    Work Plan
+                                             1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22
+
+                    Ideation and Planning     1
+                Literature Review & Tools           3
+           Data Ingestion & Preprocessing                  1
+         Reservoir Computing (RC) Model                        1
+      LLM Interface (Smolagents + Qwen3)                             2
+             FinRL with A2C (Placeholder)                                 1
+                      Component Testing                                       1
+                      Pipeline Integration                                        2
+Replace Placeholder Models (PPO, NG-RC)                                               2
+                Stigmergic RL Exploration                                                 1
+                 Walk-Forward Validation                                                      1
+               Final Report & Demo Prep                                                           3
+          LLM Fine-Tuning and submission                                                              3
+
+
+                                                  Start Week       Duration
+
+
+                                             Figure 2. Work Plan Gan Chart
+
+Week        Task
+
+1           Idea on and Planning
+
+2-4         Literature review, ﬁnalize tools and technologies
+
+5           Prototype data inges on and preprocessing module
+
+6           Develop and Test RC Models (based on Kumar, 2023)
+
+7-8         Connect LLM (Qwen3) with Agen c Framework (Smolagents) for NL Output
+
+9           Test FinRL for Ac on Strategy Genera on and Backtes ng
+
+10          Internal Tes ng of Individual Components and preliminary report submission
+
+11-12       Integrate Components (RC + FinRL + LLM) into a Uniﬁed Pipeline with Ollama
+
+13          Replace Placeholder Models (e.g., A2C → PPO, RC → NG-RC)
+
+14-15       Explore S gmergic RL Architecture (based on Xu et al., 2020)
+
+
+
+
+                                                                                                          16
+            Evaluate System Performance (Quan ta ve & Qualita ve Metrics), Stress Tes ng
+16
+            with Market Vola lity Scenarios
+
+17-19       Implement ﬁnancial dashboard, including candles ck graph and forecast
+
+20-22       LLM ﬁne-tuning, polishing and ﬁnal submission
+
+
+5.6. Evalua on Plan
+The evalua on of the prototype system focuses on three core modules: forecas ng,
+reinforcement learning-based decision-making, and natural language interac on. Each is
+tested independently due to the modular design, with metrics tailored to the func onality of
+each component.
+
+Forecas ng Module (Reservoir Compu ng)
+
+The RC model is evaluated on its ability to predict the next-day closing price of AAPL using
+historical data. The evalua on is based on a 100-step forecast horizon, using the following
+metrics:
+
+        Mean Absolute Error (MAE)
+
+        Root Mean Squared Error (RMSE)
+
+        Mean Absolute Percentage Error (MAPE)
+
+        R-squared (R²)
+
+        Normalized RMSE (based on mean and range)
+
+A baseline performance is compared against a naive predictor (e.g., yesterday’s price =
+today’s predic on). The model is considered eﬀec ve if it signiﬁcantly outperforms the
+baseline in stable market condi ons and degrades predictably in vola le regimes.
+
+Reinforcement Learning Module (FinRL + A2C)
+
+The A2C agent is evaluated using backtes ng on unseen data (July 2020 to October 2021) in
+a simulated trading environment. The following ﬁnancial and performance metrics may be
+used:
+
+        Cumula ve return
+
+        Sharpe ra o
+
+        Maximum drawdown
+
+        Vola lity of returns
+
+        Por olio alloca on stability
+
+
+                                                                                               17
+Comparisons are made against a passive buy-and-hold strategy of the DOW30 index. Due to
+A2C’s placeholder status, the focus is on func onal correctness and responsiveness to
+market signals rather than peak performance.
+
+Natural Language Module (Smolagents + Qwen3)
+
+This component is evaluated qualita vely by:
+
+      Demonstra ng task rou ng accuracy via Smolagents
+
+      Verifying that queries such as “What should I do with AAPL today?” return coherent
+       and relevant responses
+
+      Checking consistency and tone of Qwen3 output under various inputs
+
+In future itera ons, this module may be evaluated through user studies or structured
+feedback from simulated dialogue sessions to assess response helpfulness, trustworthiness,
+and transparency.
+
+Evalua on Limita ons
+
+      Integra on between modules is not yet complete; evalua ons are conducted in
+       isola on.
+
+      Backtes ng does not currently simulate transac on costs, slippage, or market impact.
+
+      No walk-forward valida on or cross-valida on has been applied yet.
+
+Future Improvements
+
+The evalua on plan will be extended to include:
+
+      Rolling retraining for forecas ng models
+
+      Real- me tes ng on live or delayed market data
+
+      Task success scoring for the LLM based on user sa sfac on
+
+      Compara ve tes ng across mul ple RL models (e.g., PPO, TD3) under iden cal
+       simulated condi ons
+
+5.7. Con ngency Plan
+To ensure con nued func onality in the face of technical challenges, several con ngency
+measures have been deﬁned:
+
+      If integra on with the large language model (LLM) fails, the system will fall back to
+       using templated natural language responses. These will be generated
+       programma cally based on structured model outputs, ensuring that user interac on
+       remains interpretable even without LLM support.
+
+
+                                                                                           18
+      If training or tuning of the reinforcement learning (RL) agent proves unsuccessful—
+       due to convergence issues or subop mal performance—the system will revert to a
+       rule-based or pre-trained policy. This policy may rely on simple heuris cs such as
+       historical moving averages or momentum indicators to produce basic asset alloca on
+       recommenda ons.
+
+      As real- me backtes ng requires signiﬁcant historical context and consistent live data
+       availability, the evalua on and demonstra on of the prototype will rely on pre-
+       collected historical datasets. These datasets ensure that tes ng can be conducted
+       consistently and without dependency on market hours or connec vity
+
+      As Ollama is computa onally expensive, alterna ve dashboard wri en with shiny
+       package could be employed as alterna ve
+
+These fallback strategies allow each component to func on independently and maintain
+demonstrable output, even if speciﬁc subsystems underperform or fail.
+
+
+
+
+                                                                                          19
+6. Feature Prototype
+This sec on presents a modular demonstra on of the key components developed for the
+Agen c Financial Advisor Bot. While full system integra on is s ll underway, each module
+has been implemented and tested individually to validate its func onality and design.
+
+The prototype currently consists of three core components:
+
+   1. Forecas ng Module: A Reservoir Compu ng (RC) model trained on historical stock
+      data to predict next-day prices. Its simplicity and speed make it well-suited for
+      frequent and rapid retraining in vola le markets.
+
+   2. Strategy Module: A reinforcement learning agent implemented using the FinRL
+      framework. Currently, a lightweight Advantage Actor-Cri c (A2C) algorithm is used as
+      a placeholder to test environment setup and ac on selec on. It is not intended for
+      the ﬁnal submission, and will be replaced with a more advanced model in later
+      itera ons.
+
+   3. Language Interface Module: A natural language interface built using Smolagents and
+      Qwen3, enabling users to interact with the system through conversa onal queries
+      and receive readable, explainable advice.
+
+Each component is designed to be lightweight, interpretable, and modular—allowing future
+upgrades and replacements without disrup ng the en re pipeline. This sec on walks
+through the current implementa on of each part, along with selected outputs, design
+mo va ons, and key limita ons.
+
+6.1. Forecas ng with Reservoir Compu ng
+We begin with a lightweight me-series forecas ng module using Echo State Networks
+(ESNs), a form of Reservoir Compu ng (RC). This approach was chosen for its:
+
+      Fast training speed: only the output weights are trained via ridge regression,
+
+      Good performance on univariate ﬁnancial data, and
+
+      Simplicity in setup, making it an eﬀec ve baseline for real- me applica ons [3].
+
+
+
+
+                                                                                           20
+In this prototype, we focus on forecas ng the next-day closing price of AAPL (Apple Inc.),
+using historical price data spanning from January 2, 2008 to June 12, 2025. The model is
+trained on the ﬁrst 1000 normalised closing price values, using a window of 10 previous
+  me steps as input.
+
+
+
+
+                                                   Figure 3.
+                      Le : Normalised AAPL close value used to train and test RC model
+                           Right: Actual vs. predicted AAPL prices using RC model.
+
+The dataset was normalized to [0, 1] and par             oned into:
+
+      Training set: 1000 me steps (2008–2011),
+
+      Evalua on: following 900+ steps, extending into periods of signiﬁcant vola lity.
+
+As shown in Figure 3, the RC model tracks the actual closing prices closely for the ﬁrst ~400
+forecast steps. However, its accuracy deteriorates signiﬁcantly during a period of rapid and
+uncharacteris c growth in AAPL stock value. This pa ern illustrates a common limita on of
+sta c forecas ng models—they tend to underperform when the underlying data distribu on
+shi s substan ally, such as during earnings shocks, macroeconomic disrup ons, or black
+swan events like the COVID-19 pandemic.
+
+
+
+
+            Figure 4. Meme illustra ng a sudden market downturn following tariﬀ announcements.
+                                 Source: X.com (formerly Twi er), April 2025.
+
+                                                                                                 21
+Previous work has demonstrated similar outcomes in ﬁnancial forecas ng using RC models.
+For instance, Kumar [3] reports that RC outperforms LSTM in both training eﬃciency and
+predic ve accuracy for univariate price data, but also notes performance degrada on under
+shi ing market regimes.
+
+To quan fy performance, we evaluate the model using several standard error metrics:
+
+      Mean Absolute Error (MAE): 0.2056
+
+      Root Mean Squared Error (RMSE): 0.3467
+
+      Mean Absolute Percentage Error (MAPE): 27.33%
+
+      R-squared (R²): -0.7052
+
+      Mean Squared Error (MSE): 0.1202
+
+      Normalized RMSE (based on mean): 0.7776
+
+      Normalized RMSE (based on max - min): 0.3975
+
+The nega ve R² value indicates that, within this test period, the RC model performs worse
+than a naïve mean predictor—par cularly during non-sta onary phases. These results
+reinforce the need for frequent retraining or the adop on of more robust architectures, such
+as Next-Genera on Reservoir Compu ng (NG-RC) [9], which oﬀer improved adaptability to
+regime shi s and long-term dependencies.
+
+6.2. Reinforcement Learning with FinRL
+To automate por olio alloca on, we model the stock trading process as a Markov Decision
+Process (MDP) and op mise it using Deep Reinforcement Learning (DRL). In this framework,
+the agent interacts with a simulated ﬁnancial environment and learns to allocate capital
+across a por olio to maximize cumula ve returns over me. This implementa on is based on
+the FinRL framework described by Liu et al. [1].
+
+MDP Formula on
+
+      Ac on Space (a ∈ (-1, 1)): The agent outputs a por olio weight vector [a₁, a₂, ..., aₙ],
+       where aᵢ represents the propor on of capital allocated to the ith asset. In this
+       prototype, weights are constrained to aᵢ ∈ [0, 1] (i.e., long-only), and ∑aᵢ = 1.
+
+      State Space: The agent observes a set of ﬁnancial indicators per asset, including
+       Open, High, Low, Close prices, volume, and a suite of technical indicators (e.g., MACD,
+       RSI, ADX). This mirrors the kind of market data a human investor would consider
+       before making a trade.
+
+      Reward Func on: The reward is deﬁned as the change in total por olio value:
+       r(s, a, s′) = v′ − v,
+                                                                                              22
+       where v and v′ represent the por olio values at states s and s′, respec vely. This
+       directly incen vizes the agent to increase por olio value through its ac ons.
+
+      Environment: The environment includes the 30 cons tuent stocks of the Dow Jones
+       Industrial Average (DOW30). Historical stock data is sourced from the Yahoo Finance
+       API.
+
+
+
+Dataset and Preprocessing
+
+      Training period: January 1, 2009 – July 1, 2020
+
+      Trading period (backtes ng): July 1, 2020 – October 31, 2021
+
+      Assets: All 30 stocks in the DOW30 index
+
+      Data source: Yahoo Finance (via FinRL data pipeline)
+
+      Preprocessing: Performed using FinRL’s default pipeline, including:
+
+           o   Technical indicators: MACD, RSI, CCI, and ADX
+
+           o   Feature scaling and missing value handling
+
+Preprocessing is handled en rely through FinRL’s built-in pipeline to ensure reproducibility
+and consistency. No manual tuning was performed due to limited domain exper se in
+ﬁnancial feature selec on.
+
+Model Implementa on
+
+      Framework: FinRL
+
+      Algorithm: Advantage Actor Cri c (A2C)
+
+      Episodes: 50
+
+      Training Frequency: Daily
+
+      Ac on granularity: Con nuous por olio weights across 30 assets
+
+The A2C algorithm is used as a placeholder model to validate the RL pipeline. It is a policy
+gradient method that separately learns a value func on (cri c) and an ac on policy (actor).
+Although computa onally eﬃcient, A2C may underperform on complex alloca on tasks
+without further tuning.
+
+Por olio Alloca on (Ac on Output)
+
+During each me step, the agent outputs a vector of por olio weights represen ng how
+much capital to allocate to each of the assets in DOW30. These weights sum to 1 and are
+constrained to be non-nega ve.
+
+
+                                                                                               23
+A sample alloca on generated by the A2C agent is shown below:
+
+
+
+
+                             Figure 5. Sample por olio alloca on by A2C agent.
+
+This vector is the core ac on taken by the agent, and it is used to simulate market interac on
+in the environment. At the next me step, the agent observes the market response (e.g.,
+price changes) and receives a reward based on the updated por olio value.
+
+Backtes ng
+
+Backtes ng plays a cri cal role in evalua ng the performance and robustness of an
+automated trading strategy. It allows us to assess how well the agent would have performed
+in historical market condi ons—before risking real capital.
+
+To reduce human error and ensure consistency, we use an automated backtes ng workﬂow,
+powered by the Quantopian pyfolio package [11]. pyfolio provides a rich set of diagnos c
+tools and visualiza ons, including:
+
+      Cumula ve returns
+
+      Daily returns
+
+      Rolling Sharpe ra o
+
+      Drawdown periods
+
+      Exposure analysis
+
+      Tear sheets for overall performance evalua on
+
+The graph below is a comparison between our model and baseline model from pyfolio
+
+
+
+
+                                                                                           24
+                    Figure 6. Backtes ng performance compared to baseline from pyfolio.
+
+
+6.3. Natural Language Output with Smolagents + Qwen3
+To complete the feedback loop between the system and the user, we integrate a natural
+language interface powered by Smolagents and Qwen3. This allows users to interact with
+the system using natural language queries and receive clear, human-readable explana ons of
+forecasts, strategy decisions, and por olio recommenda ons.
+
+Architecture and Design
+
+The language module consists of two main parts:
+
+      Smolagents Framework: Handles func on rou ng. It parses the user’s natural
+       language query, iden ﬁes the target func on (e.g., “get latest data”, “make
+       predic on”, “tell me what to invest in”), and routes it to the appropriate func ons.
+
+      Qwen3 LLM: Converts structured outputs (e.g., ac ons, recommenda ons) into
+       ﬂuent natural language responses. It provides a conversa onal layer between the
+       agent's logic and the user.
+
+This setup allows the model to behave like a virtual ﬁnancial assistant, genera ng
+explana ons based on model output and user queries, making the interac on less
+in mida ng.
+
+A simple example of the system's input-output ﬂow is shown below:
+
+
+
+
+                                                                                              25
+                      Figure 7. Sample natural language interac on with the system.
+
+This interac on demonstrates how the system converts technical outputs into accessible,
+user-friendly advice. However, this is far from perfect as the model might hallucinate or
+confuse user’s request. In this example, the model confuses WBA (Walgreens Boots Alliance)
+and AXP (American Express).
+
+6.4. Limita ons and Planned Enhancements
+While the prototype demonstrates the individual components of the Agen c Financial
+Advisor Bot, several limita ons remain that will be addressed in future development stages:
+
+Model Limita ons
+
+      The Reservoir Compu ng (RC) model, while lightweight and fast, degrades rapidly
+       under distribu on shi s. It lacks mul variate inputs and cannot adapt to regime
+       changes without frequent retraining.
+
+      The A2C reinforcement learning agent serves as a placeholder and lacks robustness
+       for complex alloca on tasks. It currently does not incorporate transac on costs, risk
+       constraints, or exposure limits.
+
+      The Qwen3 language model has not been ﬁne-tuned on ﬁnancial dialogue, and its
+       outputs may be generic or imprecise in some contexts.
+
+Evalua on and Tes ng Gaps
+
+      No walk-forward valida on or rolling-window backtes ng has been implemented.
+
+      Performance metrics like Sharpe ra o and drawdown are not yet integrated into the
+       reward func on.
+
+      The system has only been tested on historical data, with no real- me inference or
+       user trials.
+                                                                                           26
+Integra on Status
+
+      Components are currently tested in isola on. The end-to-end pipeline is s ll under
+       development.
+
+      The natural language interface cannot yet trigger real- me data queries or model
+       calls autonomously.
+
+Planned Enhancements
+
+To address the limita ons above, the following improvements are planned:
+
+      Upgrade Strategy Module: Replace A2C with more stable algorithms such as TD3 or
+       PPO for be er control in con nuous ac on spaces.
+
+      S gmergic RL Explora on: Incorporate s gmergic independent reinforcement
+       learning for mul -agent por olio collabora on and distributed decision-making.
+
+      Improve Forecas ng: Implement Next-Genera on Reservoir Compu ng (NG-RC) for
+       more interpretable and adap ve forecas ng.
+
+      Risk-Aware Reward Func ons: Redesign the reward to include Sharpe ra o,
+       drawdown penal es, and transac on cost models.
+
+      LLM Fine-Tuning: Fine-tune Qwen3 on a dataset of ﬁnancial queries and reports for
+       more relevant and trustworthy responses.
+
+      Pipeline Integra on: Use Smolagents to orchestrate RC, FinRL, and Qwen3 in a single
+       callable chain.
+
+      Deployment & UI: Create a web-based interface or CLI assistant for user interac on
+       and daily por olio sugges ons.
+
+      Automated retraining: Implement a scheduled retraining pipeline to update
+       forecas ng and RL models with recent data, maintaining adaptability under shi ing
+       market condi ons.
+
+Long-Term Direc ons
+
+Future itera ons may incorporate user memory and por olio tracking to support
+personalised investment recommenda ons. A modular framework, such as s gmergic RL,
+oﬀers the ﬂexibility needed for these features—especially as the system expands beyond the
+sta c DOW30 index to support custom por olios and dynamic asset universes.
+
+
+
+
+                                                                                            27
+7. Conclusion
+This report has presented the modular architecture, technical design, and prototype
+implementa on of an Agen c Financial Advisor Bot. The system integrates Reservoir
+Compu ng for me-series forecas ng, reinforcement learning for investment strategy
+genera on, and large language models for explainable interac on. Together, these
+components form a lightweight, interpretable decision-making pipeline tailored to retail
+investors.
+
+Future development will focus on enhancing system robustness under vola le market
+condi ons, ﬁne-tuning the language model for ﬁnancial dialogue, and exploring s gmergic
+mul -agent reinforcement learning to improve adaptability and decentralised coordina on.
+
+Long-term extensions include adding user-speciﬁc memory and personalised feedback
+mechanisms, enabling the system to retain preferences, track por olio performance, and
+generate more tailored investment advice. S gmergic RL is expected to play a central role in
+suppor ng scalable, modular learning across diverse market scenarios and user-deﬁned asset
+sets.
+
+The project aims to evolve into a ﬂexible and trustworthy personal ﬁnancial assistant—
+capable of dynamic adapta on, transparency, and con nual improvement through modular
+upgrades.
+
+
+
+
+                                                                                           28
+8. References
+[1] Xiao-Yang Liu, Hongyang Yang, Jiechao Gao, and Chris na Dan Wang. 2021. FinRL: Deep
+reinforcement learning framework to automate trading in quan ta ve ﬁnance. In
+Proceedings of the 2nd ACM Interna onal Conference on AI in Finance (ICAIF '21). ACM.
+h ps://doi.org/10.1145/3490354.3494366
+
+[2] Aymeric Roucher, Albert Villanova del Moral, Thomas Wolf, Leandro von Werra, and Erik
+Kaunismäki. 2025. smolagents: A smol library to build great agen c systems.
+h ps://github.com/huggingface/smolagents
+
+[3] Kaushal Kumar. 2023. Forecas ng crude oil prices using reservoir compu ng models. arXiv,
+preprint arXiv:2306.03052. h ps://arxiv.org/abs/2306.03052
+
+[4] Yifu Jiang, Jose Olmo, and Majed Atwi. 2024. Deep reinforcement learning for por olio
+selec on. Global Finance Journal, 62, 101016. h ps://doi.org/10.1016/j.g .2024.101016
+
+[5] Xiao-Yang Liu, Zhuoran Xiong, Shan Zhong, Hongyang Yang, and Anwar Walid. 2022.
+Prac cal deep reinforcement learning approach for stock trading. arXiv, arXiv preprint
+arXiv:1811.07522. h ps://arxiv.org/abs/1811.07522
+
+[6] Xiao-Yang Liu, Ziyi Xia, Jingyang Rui, Jiechao Gao, Hongyang Yang, Ming Zhu, Chris na Dan
+Wang, Zhaoran Wang, and Jian Guo. 2022. FinRL-Meta: Market environments and
+benchmarks for data-driven ﬁnancial reinforcement learning. arXiv,, arXiv preprint
+arXiv:2211.03107. h ps://arxiv.org/abs/2211.03107
+
+[7] Xiao-Yang Liu, Ziyi Xia, Hongyang Yang, Jiechao Gao, Daochen Zha, Ming Zhu, Chris na
+Dan Wang, Zhaoran Wang, and Jian Guo. 2023. Dynamic datasets and market environments
+for ﬁnancial reinforcement learning. arXiv, arXiv preprint arXiv:2304.13174.
+h ps://arxiv.org/abs/2304.13174
+
+[8] Yumo Xu and Shay B. Cohen. 2018. Stock movement predic on from tweets and historical
+prices. In Proceedings of the 56th Annual Mee ng of the Associa on for Computa onal
+Linguis cs (Volume 1: Long Papers), 1970–1979. Associa on for Computa onal Linguis cs.
+h ps://doi.org/10.18653/v1/P18-1183
+
+[9] Daniel J. Gauthier, Erik Bollt, Aaron Griﬃth, and Wendson A. S. Barbosa. 2021. Next
+genera on reservoir compu ng. Nature Communica ons, 12, 5564.
+h ps://doi.org/10.1038/s41467-021-25801-2
+
+[10] Xing Xu, Rongpeng Li, Zhifeng Zhao, and Honggang Zhang. 2021. S gmergic independent
+reinforcement learning for mul -agent collabora on. arXiv , arXiv preprint arXiv:1911.12504.
+h ps://arxiv.org/abs/1911.12504
+
+[11] Quantopian Inc. 2016. Pyfolio: A Python library for performance and risk analysis of
+ﬁnancial por olios. h ps://github.com/quantopian/pyfolio
+
+                                                                                            29
+[12] Jaeger, H.; Haas, H. (2004). Harnessing Nonlinearity: Predic ng Chao c Systems and
+Saving Energy in Wireless Communica on. Science. 304 (5667): 78–80.
+Bibcode:2004Sci...304...78J. doi:10.1126/science.1091277. PMID 15064413. S2CID 2184251.
+
+[13] Jaeger, Herbert (2007). Echo state network. Scholarpedia. 2 (9): 2330.
+Bibcode:2007SchpJ...2.2330J. doi:10.4249/scholarpedia.2330.
+
+[14] te Vrugt, M. (2026). An Introduc on to Reservoir Compu ng. In: te Vrugt, M. (eds)
+Ar ﬁcial Intelligence and Intelligent Ma er. Machine Intelligence for Materials Science.
+Springer, Cham. h ps://doi.org/10.1007/978-3-032-04129-6_4
+
+
+
+
+                                                                                           30
+

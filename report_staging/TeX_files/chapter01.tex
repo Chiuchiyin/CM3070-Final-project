@@ -9,3 +9,9 @@ The target user is a non-specialist investor exploring a small stock universe. T
 
 \section{Scope}
 The final product is an offline-reproducible MVP using daily data, simulated weights and historical backtesting. Live order execution, intraday data, automatic retraining, user accounts and a guaranteed 2025 test period are outside scope. Production code is under \texttt{Code/advisor}, with \texttt{Code/stock-app/app-express.py} as the UI entry point.
+\section{Alignment with the assignment brief}
+The template defines this project as CM3020 Artificial Intelligence, Project Idea 2: Financial Advisor Bot. Its central requirement is an integrated and tested system that analyses financial data, produces dynamic investment recommendations, explains those recommendations to a non-technical user and presents evidence that the advice has been evaluated. The final system meets this structure through five connected layers: data ingestion, forecasting, portfolio policy, explanation and web presentation.
+
+The preliminary report proposed Yahoo Finance, Bloomberg and CCXT as possible sources, reservoir computing for prediction, FinRL for allocation, Qwen3 and Smolagents for language interaction, and backtesting for evidence. The final project narrows this proposal into a reproducible stock-market MVP. Yahoo/cache and canonical CSV data are supported; the ESN is evaluated against baselines; an A2C policy is trained and saved for a labelled legacy period; Qwen is restricted to validated facts; and the complete workflow runs through Python Shiny. This refinement responds to the brief's distinction between a model-training system and the interface used by a non-technical user.
+
+The project is therefore assessed as a complete educational decision-support system rather than as a claim of guaranteed investment performance. It demonstrates software engineering, data science, machine learning, web programming and evaluation in one coherent workflow.

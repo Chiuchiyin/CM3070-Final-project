@@ -2,7 +2,8 @@ from pathlib import Path
 import unittest
 from advisor.data import CsvMarketDataProvider
 from advisor.explanation import (QwenExplainer, build_explanation_context,
-                                 numeric_claims_are_grounded, template_explanation)
+                                 numeric_claims_are_grounded, template_chat_response,
+                                 template_explanation)
 from advisor.service import AdvisorService
 
 FIXTURE = Path(__file__).parent / 'fixtures' / 'market_data.csv'
@@ -74,6 +75,24 @@ class ExplanationTests(unittest.TestCase):
         ).analyse(['AAPL', 'MSFT'], risk_profile='moderate')
         self.assertTrue(fallback.explanation_source.startswith('template:'))
         self.assertIn('educational historical-data demonstration', fallback.explanation)
+
+    def test_template_chat_answers_from_service_facts(self):
+        response = template_chat_response(
+            'Why is cash held?', self.result.forecasts, self.result.allocations,
+            risk_profile=self.result.risk_profile,
+            warnings=self.result.warnings,
+            backtest_metrics=self.result.backtest_metrics,
+        )
+        self.assertIn('cash', response.lower())
+        self.assertIn('moderate', response.lower())
+
+    def test_template_chat_does_not_invent_for_unknown_question(self):
+        response = template_chat_response(
+            'What is the weather today?',
+            self.result.forecasts,
+            self.result.allocations,
+        )
+        self.assertIn('can explain', response)
 
 if __name__ == '__main__':
     unittest.main()

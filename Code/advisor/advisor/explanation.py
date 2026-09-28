@@ -119,6 +119,62 @@ def template_explanation(forecasts, allocations, *, risk_profile='moderate', war
             f'For the {risk_profile} profile, the illustrative allocation is {allocation} with {cash:.1%} held as cash.'
             f'{metric}{warning} This is an educational historical-data demonstration, not personalized financial advice.')
 
+
+def template_chat_response(question, forecasts, allocations, *, risk_profile='moderate',
+                           warnings=None, backtest_metrics=None):
+    """Answer common advisor questions using only validated service results."""
+    question = str(question or '').strip()
+    if not question:
+        return 'Ask about allocations, forecasts, historical performance, risk, or the data date.'
+
+    lowered = question.lower()
+    as_of = pd.Timestamp(forecasts['as_of_date'].max()).date()
+    cash = float(allocations['cash_weight'].iloc[0]) if 'cash_weight' in allocations else 0.0
+    allocation_text = ', '.join(
+        f'{row.ticker} {row.weight:.1%}' for row in allocations.itertuples()
+    )
+    forecast_text = '; '.join(
+        f'{row.ticker}: {row.predicted_close:.2f} ({row.predicted_return:+.2%})'
+        for row in forecasts.itertuples()
+    )
+    historical = (backtest_metrics or {}).get('equal_weight', {})
+
+    if any(term in lowered for term in ('allocation', 'weight', 'portfolio', 'hold')):
+        return (
+            f'As of {as_of}, the illustrative {risk_profile} allocation is {allocation_text}, '
+            f'with {cash:.1%} held as cash. This is a model output for education, not personalized advice.'
+        )
+    if any(term in lowered for term in ('forecast', 'predict', 'price', 'return', 'rise', 'fall')):
+        return (
+            f'As of {as_of}, the next-close estimates are {forecast_text}. '
+            'These are model estimates rather than guaranteed returns.'
+        )
+    if any(term in lowered for term in ('performance', 'backtest', 'evaluation', 'historical')):
+        if historical and historical.get('cumulative_return') is not None:
+            return (
+                f'The equal-weight historical simulation returned '
+                f"{float(historical['cumulative_return']):+.2%}. It is historical evidence, "
+                'not a forecast of future performance.'
+            )
+        return 'No historical backtest is available for the selected data range.'
+    if any(term in lowered for term in ('risk', 'cash', 'safe', 'conservative')):
+        warning_text = f" Warnings: {'; '.join(warnings)}." if warnings else ''
+        return (
+            f'The selected risk profile is {risk_profile} with {cash:.1%} held as cash.'
+            f'{warning_text} The allocation is simulated and educational.'
+        )
+    if any(term in lowered for term in ('data', 'date', 'latest', 'real-time', 'realtime')):
+        warning_text = f" {'; '.join(warnings)}" if warnings else ''
+        return (
+            f'The analysis uses the latest available historical row through {as_of}; '
+            f'it is not a real-time price feed.{warning_text}'
+        )
+    return (
+        'I can explain the current allocation, forecast estimates, historical '
+        'backtest, risk profile, or data date. Ask one of those questions and '
+        'I will answer from the current analysis.'
+    )
+
 class QwenExplainer:
     """Optional bounded generator with deterministic fallback on failure."""
     def __init__(self, generator=None, *, model_loader=None, timeout_seconds=20.0):
@@ -153,6 +209,42 @@ class QwenExplainer:
                     return generator(context.prompt())
                 future=executor.submit(generate)
                 generated=str(future.result(timeout=self.timeout_seconds)).strip()
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
+            if generated and numeric_claims_are_grounded(generated, context):
+                return generated, 'qwen'
+            return fallback, 'template: unsupported or empty model output'
+        except FutureTimeout:
+            return fallback, 'template: Qwen timed out'
+        except Exception as exc:
+            return fallback, f'template: Qwen unavailable ({type(exc).__name__})'
+
+    def answer_question(self, question, forecasts, allocations, **kwargs):
+        """Answer a user question with grounded facts and a safe fallback."""
+        context = build_explanation_context(forecasts, allocations, **kwargs)
+        fallback = template_chat_response(
+            question, forecasts, allocations,
+            risk_profile=kwargs.get('risk_profile', 'moderate'),
+            warnings=kwargs.get('warnings'),
+            backtest_metrics=kwargs.get('backtest_metrics'),
+        )
+        try:
+            executor = ThreadPoolExecutor(max_workers=1)
+            try:
+                def generate():
+                    generator = self._get_generator()
+                    if hasattr(generator, 'generate_answer'):
+                        return generator.generate_answer(context, question)
+                    prompt = (
+                        context.prompt().replace(
+                            'Return one concise paragraph.',
+                            'Answer the user question in one concise paragraph. '
+                            f'USER_QUESTION={question!r}',
+                        )
+                    )
+                    return generator(prompt)
+                future = executor.submit(generate)
+                generated = str(future.result(timeout=self.timeout_seconds)).strip()
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
             if generated and numeric_claims_are_grounded(generated, context):
@@ -214,6 +306,40 @@ class SmolagentsQwenGenerator:
             'Return one concise paragraph only.\n'
             f'DISPLAY_FACTS_JSON={json.dumps(display_facts, sort_keys=True, default=str)}'
         )
+        return self._generate_text(task)
+
+    def generate_answer(self, context, question):
+        facts_tool = make_smolagents_facts_tool(context)
+        facts = facts_tool()
+        display_facts = {
+            'as_of_date': facts['as_of_date'],
+            'risk_profile': facts['risk_profile'],
+            'forecasts': [
+                {'ticker': row['ticker'], 'predicted_close': row['predicted_close'],
+                 'predicted_return': f"{float(row['predicted_return']):.2%}"}
+                for row in facts['forecasts']
+            ],
+            'allocations': [
+                {'ticker': row['ticker'], 'weight': f"{float(row['weight']):.1%}"}
+                for row in facts['allocations']
+            ],
+            'cash_weight': f"{facts['cash_weight']:.1%}",
+            'warnings': facts['warnings'],
+            'backtest_metrics': facts['backtest_metrics'],
+        }
+        task = (
+            'You are a grounded financial-advisor assistant. /no_think\n'
+            'Answer the USER_QUESTION using only DISPLAY_FACTS_JSON. Do not invent '
+            'numbers, dates, tickers, assets, or performance. If the facts do not '
+            'answer the question, say that clearly. Distinguish estimates from '
+            'historical simulations, mention relevant warnings, and do not give '
+            'personalized financial advice. Return one concise paragraph only.\n'
+            f'USER_QUESTION={question!r}\n'
+            f'DISPLAY_FACTS_JSON={json.dumps(display_facts, sort_keys=True, default=str)}'
+        )
+        return self._generate_text(task)
+
+    def _generate_text(self, task):
         # Qwen3 must be prompted with enable_thinking=False; the installed
         # Smolagents wrapper does not expose that chat-template argument.
         # Its locally loaded tokenizer/model are reused for generation.

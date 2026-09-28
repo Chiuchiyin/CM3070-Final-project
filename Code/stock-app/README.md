@@ -4,6 +4,12 @@
 Shiny application. It uses `AdvisorService` from `Code/advisor/` and exposes
 the Summary, Portfolio, Forecast, and Evaluation views.
 
+The sidebar also includes an advisor chatbot. Run an analysis, enter a question
+about allocations, forecasts, historical performance, risk, or the data date,
+then click **Ask advisor**. The response uses the current analysis facts.
+Choosing **Qwen + Smolagents** enables local model answers with a grounded
+fallback; the app shows which source produced the response.
+
 Run it from the repository root with:
 
 ```powershell

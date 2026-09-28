@@ -474,6 +474,22 @@ Verification:
 
 ## 2026-09-27
 
+### Sidebar advisor chatbot (2026-09-28)
+
+Status: implemented and verified offline
+
+- Added a sidebar question box and Ask advisor action tied to the current
+  `AdvisorService` analysis result.
+- Deterministic responses cover allocations, forecasts, historical backtest,
+  risk, and data-date questions without inventing missing figures.
+- Qwen/Smolagents mode now accepts a question through the existing read-only
+  facts tool and applies the numeric grounding validator before displaying it;
+  timeouts, unavailable models, and unsupported claims fall back to the
+  deterministic response.
+- The sidebar shows whether an answer came from Qwen or the grounded fallback.
+- `app-express.py` and `explanation.py` compile; all 53 advisor tests pass in
+  the `CM3070-FP` environment.
+
 ### Section 4.2 Financial Advisor Bot requirements audit (2026-09-28)
 
 Status: core requirements satisfied; delivery/UI gaps remain
@@ -511,6 +527,18 @@ Status: implemented and verified
   `CM3070-FP`.
 - Corrected the Shiny page-sidebar child order after the first restart check;
   the refreshed app now serves HTTP 200 on port 8000.
+
+### Requirements backlog reconciliation (2026-09-28)
+
+Status: complete
+
+- Reconciled `IMPLEMENTATION_TODO.md` with the section 4.2 Financial Advisor
+  Bot brief and marked the responsive Summary/Evaluation work complete.
+- Consolidated the remaining work into final report/reproducibility tasks,
+  an explicit decision about exposing the approved FinRL policy in the live
+  app, deferred 2025 data work, and optional improvements.
+- The current next item is the offline MVP report and artifact-backed figures;
+  no 2025 performance claim will be made until matching data is available.
 
 ### Qwen and Smolagents explanation in Shiny (2026-09-28)
 

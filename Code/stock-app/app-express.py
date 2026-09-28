@@ -10,7 +10,11 @@ from shinywidgets import output_widget, render_widget
 ADVISOR_ROOT = Path(__file__).resolve().parents[1] / "advisor"
 sys.path.insert(0, str(ADVISOR_ROOT))
 from advisor.data import CsvMarketDataProvider, YahooMarketDataProvider, canonical_ticker
-from advisor.explanation import QwenExplainer, SmolagentsQwenGenerator
+from advisor.explanation import (
+    QwenExplainer,
+    SmolagentsQwenGenerator,
+    template_chat_response,
+)
 from advisor.service import AdvisorService
 
 MVP_TICKERS = ["AAPL", "MSFT", "JPM", "JNJ", "PG"]
@@ -66,6 +70,18 @@ app_ui = ui.page_sidebar(
         ui.input_select("risk_profile", "Risk profile", choices={"conservative": "Conservative", "moderate": "Moderate", "growth": "Growth"}, selected="moderate"),
         ui.input_select("explanation_mode", "Explanation", choices={"template": "Instant grounded summary", "qwen": "Qwen + Smolagents (local model)"}, selected="template"),
         ui.input_action_button("analyse", "Analyse", class_="btn-primary"),
+        ui.hr(),
+        ui.h4("Advisor chatbot"),
+        ui.p("Ask about the current allocation, forecast, historical performance, risk, or data date."),
+        ui.input_text_area(
+            "chat_question",
+            "Question",
+            placeholder="Why is cash held?",
+            rows=3,
+        ),
+        ui.input_action_button("chat_send", "Ask advisor", class_="btn-secondary"),
+        ui.output_text("chat_status"),
+        ui.div(ui.output_text_verbatim("chat_response"), class_="chat-response"),
         ui.p("Educational decision-support prototype. Simulated allocations only."),
         ui.p("Demo uses the last available historical entry as the latest close. Prices are not real time."),
     ),
@@ -258,6 +274,55 @@ def server(input: Inputs, output: Outputs, session: Session):
     def explanation():
         state = analysis_state()
         return state["error"] or "Press Analyse to begin." if state["result"] is None else state["result"].explanation
+
+    @reactive.calc
+    @reactive.event(input.chat_send)
+    def chat_state():
+        result = current_result()
+        question = (input.chat_question() or "").strip()
+        if result is None:
+            return {"response": "Run Analyse first so I have a current advisor result to discuss.", "source": "unavailable"}
+        if not question:
+            return {"response": "Ask about the allocation, forecast, historical performance, risk, or data date.", "source": "template"}
+        kwargs = {
+            "risk_profile": result.risk_profile,
+            "warnings": result.warnings,
+            "backtest_metrics": result.backtest_metrics,
+            "model_version": result.model_version,
+            "dataset_version": result.dataset_version,
+        }
+        if input.explanation_mode() == "qwen":
+            response, source = qwen_service.explainer.answer_question(
+                question, result.forecasts, result.allocations, **kwargs
+            )
+        else:
+            response = template_chat_response(
+                question,
+                result.forecasts,
+                result.allocations,
+                risk_profile=result.risk_profile,
+                warnings=result.warnings,
+                backtest_metrics=result.backtest_metrics,
+            )
+            source = "template"
+        return {"response": response, "source": source}
+
+    @output
+    @render.text
+    def chat_status():
+        state = chat_state()
+        if state["source"] == "qwen":
+            return f"Chat source: Qwen + Smolagents ({qwen_model_id})"
+        if state["source"].startswith("template:"):
+            return f"Chat source: grounded fallback ({state['source'].removeprefix('template: ')})"
+        if state["source"] == "unavailable":
+            return "Chat status: analyse data first"
+        return "Chat source: grounded advisor facts"
+
+    @output
+    @render.text
+    def chat_response():
+        return chat_state()["response"]
 
     @output
     @render.data_frame

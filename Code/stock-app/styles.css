@@ -33,6 +33,20 @@
   overflow-wrap: anywhere;
 }
 
+.chat-response {
+  max-width: 100%;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.chat-response pre,
+.chat-response .shiny-text-output {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+
 .summary-grid,
 .evaluation-grid {
   align-items: start;

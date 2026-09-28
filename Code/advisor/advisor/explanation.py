@@ -93,6 +93,23 @@ def numeric_claims_are_grounded(text, context):
         if not any(abs(candidate-item) <= rounding_tolerance + 1e-9 for item in candidates): return False
     return True
 
+
+def _looks_like_structured_output(text):
+    """Return True for JSON/tool payloads that must not be shown as prose."""
+    candidate = str(text or '').strip()
+    if candidate.startswith('```') and candidate.endswith('```'):
+        candidate = candidate.strip('`').strip()
+        if candidate.lower().startswith('json'):
+            candidate = candidate[4:].strip()
+    if not ((candidate.startswith('{') and candidate.endswith('}')) or
+            (candidate.startswith('[') and candidate.endswith(']'))):
+        return False
+    try:
+        parsed = json.loads(candidate)
+    except (TypeError, json.JSONDecodeError):
+        return False
+    return isinstance(parsed, (dict, list))
+
 def advisor_facts_tool(context): return context.as_dict()
 
 def make_smolagents_facts_tool(context):
@@ -211,9 +228,11 @@ class QwenExplainer:
                 generated=str(future.result(timeout=self.timeout_seconds)).strip()
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
-            if generated and numeric_claims_are_grounded(generated, context):
+            if (generated and not _looks_like_structured_output(generated)
+                    and numeric_claims_are_grounded(generated, context)):
                 return generated, 'qwen'
-            return fallback, 'template: unsupported or empty model output'
+            reason = 'Qwen returned structured data' if _looks_like_structured_output(generated) else 'unsupported or empty model output'
+            return fallback, f'template: {reason}'
         except FutureTimeout:
             return fallback, 'template: Qwen timed out'
         except Exception as exc:
@@ -247,9 +266,11 @@ class QwenExplainer:
                 generated = str(future.result(timeout=self.timeout_seconds)).strip()
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
-            if generated and numeric_claims_are_grounded(generated, context):
+            if (generated and not _looks_like_structured_output(generated)
+                    and numeric_claims_are_grounded(generated, context)):
                 return generated, 'qwen'
-            return fallback, 'template: unsupported or empty model output'
+            reason = 'Qwen returned structured data' if _looks_like_structured_output(generated) else 'unsupported or empty model output'
+            return fallback, f'template: {reason}'
         except FutureTimeout:
             return fallback, 'template: Qwen timed out'
         except Exception as exc:
@@ -303,7 +324,8 @@ class SmolagentsQwenGenerator:
             'Explain next-period estimates separately from the historical '
             'equal-weight simulation, mention warnings, and say this is educational '
             'rather than personalized financial advice. '
-            'Return one concise paragraph only.\n'
+            'Return one concise natural-language paragraph only. Never return '
+            'JSON, YAML, a dictionary, field names, or a tool payload.\n'
             f'DISPLAY_FACTS_JSON={json.dumps(display_facts, sort_keys=True, default=str)}'
         )
         return self._generate_text(task)
@@ -333,7 +355,9 @@ class SmolagentsQwenGenerator:
             'numbers, dates, tickers, assets, or performance. If the facts do not '
             'answer the question, say that clearly. Distinguish estimates from '
             'historical simulations, mention relevant warnings, and do not give '
-            'personalized financial advice. Return one concise paragraph only.\n'
+            'personalized financial advice. Return one concise natural-language '
+            'paragraph only. Never return JSON, YAML, a dictionary, field names, '
+            'or a tool payload.\n'
             f'USER_QUESTION={question!r}\n'
             f'DISPLAY_FACTS_JSON={json.dumps(display_facts, sort_keys=True, default=str)}'
         )

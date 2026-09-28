@@ -1,0 +1,9 @@
+\\chapter{Literature Review}
+\\section{Forecasting}
+Financial prices are difficult targets because distributions change across regimes and useful signal is small relative to noise. ARIMA and linear regression are interpretable but restrictive. A last-close forecast is therefore a necessary benchmark. Reservoir computing offers a lighter recurrent alternative: an Echo State Network uses a fixed reservoir and fits an output layer \\cite{jaeger2001echo,lukosevicius2009reservoir}. It reduces training cost, but depends on scaling, washout and reservoir parameters and can still overfit. This project compares a deterministic NumPy ESN with last close and supports ReservoirPy through the same interface. Scaling is fitted on training rows only and evaluation is walk-forward.
+
+\\section{Reinforcement learning}
+Portfolio management is sequential decision making: an agent observes returns and holdings, chooses weights and receives a reward from subsequent performance. FinRL provides environments and examples for deep reinforcement learning in finance \\cite{yang2020finrl}. RL results are vulnerable to leakage and overfitting, so this project stores the A2C artifact's ticker order, observation schema, dates, seed and costs. Equal weight, buy and hold and forecast-ranked policies are transparent controls.
+
+\\section{Data, agents and contribution}
+Yahoo Finance is useful but mutable and rate-limited. The project uses dated CSV data and metadata, validates OHLC relationships and ticker coverage, and backtests chronologically with transaction costs and slippage. Smolagents and Qwen3 provide optional natural-language interaction \\cite{smolagents,qwen}; the model receives only validated forecasts, allocations, dates and metrics, cannot calculate or alter them, and falls back to a deterministic template. The contribution is an integrated, tested vertical slice connecting data, forecasting, allocation, evaluation and explanation for a non-technical user.

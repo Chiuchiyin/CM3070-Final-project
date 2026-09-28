@@ -10,12 +10,15 @@ from shinywidgets import output_widget, render_widget
 ADVISOR_ROOT = Path(__file__).resolve().parents[1] / "advisor"
 sys.path.insert(0, str(ADVISOR_ROOT))
 from advisor.data import CsvMarketDataProvider, YahooMarketDataProvider, canonical_ticker
+from advisor.forecasting import MovingAverageForecaster
+from advisor.finrl_adapter import load_approved_finrl_policy
 from advisor.explanation import (
     QwenExplainer,
     SmolagentsQwenGenerator,
     template_chat_response,
 )
 from advisor.service import AdvisorService
+from advisor.strategy import ForecastRankedStrategy
 
 MVP_TICKERS = ["AAPL", "MSFT", "JPM", "JNJ", "PG"]
 ORIGINAL_STOCKS = {
@@ -50,15 +53,51 @@ else:
     STOCK_CHOICES = {ticker: f"{ticker} — {name}" for ticker, name in ORIGINAL_STOCKS.items()}
     DEMO_START_DATE = None
     DEMO_END_DATE = None
-service = AdvisorService(provider, dataset_version="mvp_runtime")
+production_forecaster = MovingAverageForecaster(window=20)
+production_strategy = ForecastRankedStrategy(top_k=3, minimum_predicted_return=0.0)
+service = AdvisorService(
+    provider,
+    forecaster=production_forecaster,
+    strategy=production_strategy,
+    dataset_version="mvp_runtime",
+)
 qwen_model_id = os.getenv("ADVISOR_QWEN_MODEL", "Qwen/Qwen3-1.7B")
 qwen_service = AdvisorService(
-    provider, dataset_version="mvp_runtime",
+    provider,
+    forecaster=MovingAverageForecaster(window=20),
+    strategy=ForecastRankedStrategy(top_k=3, minimum_predicted_return=0.0),
+    dataset_version="mvp_runtime",
     explainer=QwenExplainer(
         model_loader=lambda: SmolagentsQwenGenerator(model_id=qwen_model_id),
         timeout_seconds=180.0,
     ),
 )
+FINRL_MODEL = ADVISOR_ROOT / "artifacts" / "models" / "finrl_a2c_legacy.zip"
+FINRL_METADATA = ADVISOR_ROOT / "artifacts" / "models" / "finrl_a2c_legacy.metadata.json"
+_finrl_policy = None
+_finrl_error = None
+
+
+def get_finrl_service():
+    """Load the approved legacy A2C policy only when selected by the user."""
+    global _finrl_policy, _finrl_error
+    if _finrl_policy is None and _finrl_error is None:
+        try:
+            _finrl_policy, _ = load_approved_finrl_policy(
+                FINRL_MODEL,
+                FINRL_METADATA,
+                tickers=MVP_TICKERS,
+            )
+        except Exception as exc:
+            _finrl_error = f"FinRL policy unavailable: {exc}"
+    if _finrl_policy is None:
+        raise RuntimeError(_finrl_error or "FinRL policy unavailable")
+    return AdvisorService(
+        provider,
+        forecaster=MovingAverageForecaster(window=20),
+        strategy=_finrl_policy,
+        dataset_version="mvp_runtime_finrl_legacy",
+    )
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
@@ -68,20 +107,17 @@ app_ui = ui.page_sidebar(
         ui.input_date_range("history_dates", "Chart dates", start=DEMO_START_DATE, end=DEMO_END_DATE),
         ui.input_date("as_of", "As-of date (blank uses last available)", value=DEMO_END_DATE),
         ui.input_select("risk_profile", "Risk profile", choices={"conservative": "Conservative", "moderate": "Moderate", "growth": "Growth"}, selected="moderate"),
+        ui.input_select(
+            "allocation_strategy",
+            "Allocation strategy",
+            choices={
+                "forecast_ranked": "Forecast-ranked (default)",
+                "finrl_a2c": "FinRL A2C (legacy artifact)",
+            },
+            selected="forecast_ranked",
+        ),
         ui.input_select("explanation_mode", "Explanation", choices={"template": "Instant grounded summary", "qwen": "Qwen + Smolagents (local model)"}, selected="template"),
         ui.input_action_button("analyse", "Analyse", class_="btn-primary"),
-        ui.hr(),
-        ui.h4("Advisor chatbot"),
-        ui.p("Ask about the current allocation, forecast, historical performance, risk, or data date."),
-        ui.input_text_area(
-            "chat_question",
-            "Question",
-            placeholder="Why is cash held?",
-            rows=3,
-        ),
-        ui.input_action_button("chat_send", "Ask advisor", class_="btn-secondary"),
-        ui.output_text("chat_status"),
-        ui.div(ui.output_text_verbatim("chat_response"), class_="chat-response"),
         ui.p("Educational decision-support prototype. Simulated allocations only."),
         ui.p("Demo uses the last available historical entry as the latest close. Prices are not real time."),
     ),
@@ -100,58 +136,90 @@ app_ui = ui.page_sidebar(
         fill=False,
         class_="kpi-grid",
     ),
-    ui.navset_tab(
-        ui.nav_panel("Market Data", output_widget("market_chart"), ui.output_data_frame("latest_market_data")),
-        ui.nav_panel(
-            "Summary",
-            ui.layout_columns(
-                ui.card(
-                    ui.card_header("Advisor explanation"),
-                    ui.output_text("explanation_status"),
-                    ui.div(ui.output_text_verbatim("explanation"), class_="advisor-explanation"),
-                ),
-                ui.card(
-                    ui.card_header("Data quality"),
-                    ui.output_data_frame("warnings"),
-                ),
-                col_widths=(8, 4),
-                fill=False,
-                class_="summary-grid",
-            ),
-            ui.card(
-                ui.card_header("Disclosures"),
-                ui.output_data_frame("disclosures"),
-            ),
-        ),
-        ui.nav_panel("Portfolio", ui.output_data_frame("allocations"), ui.output_data_frame("allocation_changes")),
-        ui.nav_panel("Forecast", output_widget("forecast_chart"), ui.output_data_frame("forecast_table")),
-        ui.nav_panel(
-            "Evaluation",
-            ui.layout_columns(
-                ui.card(
-                    ui.card_header("Historical strategy comparison"),
-                    ui.p(
-                        "Metrics are calculated on the available historical window "
-                        "with the same assumptions for each strategy. They are not "
-                        "a guarantee of future performance."
+    ui.layout_columns(
+        ui.div(
+            ui.navset_tab(
+                ui.nav_panel("Market Data", output_widget("market_chart"), ui.output_data_frame("latest_market_data")),
+                ui.nav_panel(
+                    "Summary",
+                    ui.layout_columns(
+                        ui.card(
+                            ui.card_header("Advisor explanation"),
+                            ui.output_text("explanation_status"),
+                            ui.div(ui.output_text_verbatim("explanation"), class_="advisor-explanation"),
+                        ),
+                        ui.card(
+                            ui.card_header("Data quality"),
+                            ui.output_data_frame("warnings"),
+                        ),
+                        col_widths=(8, 4),
+                        fill=False,
+                        class_="summary-grid",
                     ),
-                    ui.output_data_frame("evaluation_metrics"),
-                ),
-                ui.card(
-                    ui.card_header("Metric guide"),
-                    ui.tags.ul(
-                        ui.tags.li("Cumulative return: total simulated growth."),
-                        ui.tags.li("Annual return and volatility: annualised performance and variability."),
-                        ui.tags.li("Sharpe: return relative to variability."),
-                        ui.tags.li("Max drawdown: largest peak-to-trough loss."),
-                        ui.tags.li("Final value: simulated value from the fixed starting capital."),
+                    ui.card(
+                        ui.card_header("Disclosures"),
+                        ui.output_data_frame("disclosures"),
                     ),
                 ),
-                col_widths=(9, 3),
-                fill=False,
-                class_="evaluation-grid",
+                ui.nav_panel("Portfolio", ui.output_data_frame("allocations"), ui.output_data_frame("allocation_changes")),
+                ui.nav_panel("Forecast", output_widget("forecast_chart"), ui.output_data_frame("forecast_table")),
+                ui.nav_panel(
+                    "Evaluation",
+                    ui.layout_columns(
+                        ui.card(
+                            ui.card_header("Historical strategy comparison"),
+                            ui.p(
+                                "Metrics are calculated on the available historical window "
+                                "with the same assumptions for each strategy. They are not "
+                                "a guarantee of future performance."
+                            ),
+                            ui.output_data_frame("evaluation_metrics"),
+                        ),
+                        ui.card(
+                            ui.card_header("Metric guide"),
+                            ui.tags.ul(
+                                ui.tags.li("Cumulative return: total simulated growth."),
+                                ui.tags.li("Annual return and volatility: annualised performance and variability."),
+                                ui.tags.li("Sharpe: return relative to variability."),
+                                ui.tags.li("Max drawdown: largest peak-to-trough loss."),
+                                ui.tags.li("Final value: simulated value from the fixed starting capital."),
+                            ),
+                        ),
+                        col_widths=(9, 3),
+                        fill=False,
+                        class_="evaluation-grid",
+                    ),
+                ),
             ),
+            class_="main-content",
         ),
+        ui.card(
+            ui.card_header("Advisor chatbot"),
+            ui.p("Ask about the current allocation, forecast, historical performance, risk, or data date."),
+            ui.input_text_area(
+                "chat_question",
+                "Question",
+                placeholder="Why is cash held?",
+                rows=3,
+            ),
+            ui.input_select(
+                "chat_mode",
+                "Chatbot model",
+                choices={
+                    "qwen": "Qwen + Smolagents (local model)",
+                    "template": "Instant grounded responder",
+                },
+                selected="qwen",
+            ),
+            ui.input_action_button("chat_send", "Ask advisor", class_="btn-secondary"),
+            ui.output_text("chat_status"),
+            ui.div(ui.output_text_verbatim("chat_response"), class_="chat-response"),
+            ui.p("Answers are grounded in the current analysis and are for educational use."),
+            class_="chat-panel",
+        ),
+        col_widths=(9, 3),
+        fill=False,
+        class_="app-content-grid",
     ),
     title="Agentic Financial Advisor", fillable=True,
 )
@@ -165,7 +233,12 @@ def server(input: Inputs, output: Outputs, session: Session):
             if not tickers:
                 return {"result": None, "error": "Select at least one ticker."}
             value = input.as_of()
-            selected_service = qwen_service if input.explanation_mode() == "qwen" else service
+            if input.allocation_strategy() == "finrl_a2c":
+                selected_service = get_finrl_service()
+                if input.explanation_mode() == "qwen":
+                    selected_service.explainer = qwen_service.explainer
+            else:
+                selected_service = qwen_service if input.explanation_mode() == "qwen" else service
             result = selected_service.analyse(tickers=tickers, as_of_date=value if value else None, risk_profile=input.risk_profile())
             return {"result": result, "error": None}
         except Exception as exc:
@@ -291,7 +364,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             "model_version": result.model_version,
             "dataset_version": result.dataset_version,
         }
-        if input.explanation_mode() == "qwen":
+        if input.chat_mode() == "qwen":
             response, source = qwen_service.explainer.answer_question(
                 question, result.forecasts, result.allocations, **kwargs
             )
@@ -338,7 +411,8 @@ def server(input: Inputs, output: Outputs, session: Session):
         result = current_result()
         if result is None:
             return empty_frame("Model and data disclosures will appear after analysis.")
-        return pd.DataFrame({"Field": ["Use", "Data date", "Model version", "Dataset version", "Risk profile"], "Value": ["Educational decision support; simulated allocations only", str(result.as_of_date.date()) if result.as_of_date is not None else "Unavailable", result.model_version, result.dataset_version, result.risk_profile]})
+        strategy_name = result.allocations["strategy_name"].iloc[0] if "strategy_name" in result.allocations else "Unavailable"
+        return pd.DataFrame({"Field": ["Use", "Data date", "Model version", "Dataset version", "Risk profile", "Allocation strategy"], "Value": ["Educational decision support; simulated allocations only", str(result.as_of_date.date()) if result.as_of_date is not None else "Unavailable", result.model_version, result.dataset_version, result.risk_profile, strategy_name]})
 
     @output
     @render.data_frame
@@ -431,6 +505,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             "equal_weight": "Equal weight",
             "buy_and_hold": "Buy and hold",
             "forecast_ranked_moving_average": "Forecast ranked",
+            "forecast_ranked_moving_average_return": "Forecast ranked",
             "market_index": "Market index",
         }
         rows = []

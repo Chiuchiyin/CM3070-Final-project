@@ -60,6 +60,20 @@ class ExplanationTests(unittest.TestCase):
         )
         self.assertIn('cash is 10.0%', generated)
 
+    def test_qwen_adapter_does_not_expose_structured_payloads(self):
+        explainer = QwenExplainer(
+            generator=lambda prompt: '{"cash_weight": "10.0%", "warnings": []}'
+        )
+        generated, source = explainer.explain_with_status(
+            self.result.forecasts,
+            self.result.allocations,
+            risk_profile=self.result.risk_profile,
+            warnings=self.result.warnings,
+            backtest_metrics=self.result.backtest_metrics,
+        )
+        self.assertNotIn('"cash_weight"', generated)
+        self.assertTrue(source.startswith('template: Qwen returned structured data'))
+
     def test_service_reports_qwen_source_and_grounded_fallback(self):
         provider = CsvMarketDataProvider(FIXTURE)
         generated = AdvisorService(

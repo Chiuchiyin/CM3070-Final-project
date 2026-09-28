@@ -12,7 +12,7 @@ service and its saved artifacts.
 | `FinRL/FinRL_PortfolioAllocation_NeurIPS_2020.ipynb` | Upstream example adapted | Selected A2C policy contract | Source for the portfolio direction; production environment, cash action, costs, metadata, and chronological splits are implemented locally. |
 | `FinRL/*.ipynb` other variants | Upstream examples | Reference only | Not in the production path because their action spaces do not match the MVP target-weight contract. |
 | `portfolio_demo.ipynb` | Exploration/presentation | Shiny Portfolio and Evaluation views | Presentation concepts were reimplemented in the service-driven UI. |
-| `LLM.ipynb`, `LLM_demo.ipynb` | Exploration | Optional Qwen/Smolagents explanation layer | Prompting ideas only; production boundary restricts the model to structured facts. |
+| `LLM.ipynb`, `LLM_demo.ipynb` | Exploration | Optional Qwen/Smolagents explanation layer | `LLM_demo.ipynb` is the rough reference: Qwen, a `fetch_latest_data` tool, direct chat history, and CodeAgent. Production keeps the Qwen/Smolagents behavior but restricts the model to validated advisor facts and rejects raw tool/JSON payloads. |
 | `LSTM vs. RC/simulation.ipynb` | Exploration | Optional benchmark evidence | Not a production model; claims require reproducible saved evaluation. |
 | `stock-app/app-express.py` | Original application | Unified Python Shiny app | Existing Shiny library and interaction style retained; direct Yahoo logic replaced by `AdvisorService`. |
 | `stock-app/app-core.py` | Duplicate application | Retire after parity review | Kept for provenance until final smoke coverage confirms the Express app is the single entry point. |

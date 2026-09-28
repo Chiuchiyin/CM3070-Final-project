@@ -490,6 +490,60 @@ Status: implemented and verified offline
 - `app-express.py` and `explanation.py` compile; all 53 advisor tests pass in
   the `CM3070-FP` environment.
 
+### Right-hand chatbot layout (2026-09-28)
+
+Status: implemented and verified
+
+- Moved the chatbot controls out of the analysis input sidebar into a dedicated
+  right-hand card beside the main tabs.
+- Added a sticky desktop position and a full-width narrow-screen fallback so
+  the chat panel remains usable without compressing the analysis controls.
+- Compilation, 53 offline tests, and `git diff --check` pass.
+
+### Chatbot Qwen mode clarification (2026-09-28)
+
+Status: implemented and verified
+
+- Confirmed the cached local Qwen path returns `source=qwen` for a chatbot
+  question in `CM3070-FP`.
+- The previous chatbot inherited the summary selector, which defaulted to the
+  deterministic responder. Added a separate chatbot model selector with Qwen
+  + Smolagents as the default, so the chosen chatbot backend is now explicit.
+- The deterministic responder remains available for immediate answers and as
+  a visible fallback when Qwen is unavailable or produces unsupported output.
+
+### LLM_demo notebook alignment (2026-09-28)
+
+Status: reconciled
+
+- Reviewed `LLM_demo.ipynb`, which is the rough reference implementation for
+  the Qwen/Smolagents chatbot. It uses a Qwen model, a `fetch_latest_data`
+  tool, direct conversational messages, and a CodeAgent.
+- The production app preserves the useful behavior while using the safer
+  `get_advisor_facts` boundary. The model receives current validated forecasts,
+  allocations, warnings, and historical metrics instead of unrestricted file,
+  network, or calculation access.
+- Qwen once returned the facts dictionary as raw JSON. Added a structured-output
+  guard, stronger natural-language prompting, and a regression test so users
+  receive prose or an explicit grounded fallback instead.
+
+### Production allocation strategy replacement (2026-09-28)
+
+Status: implemented and verified
+
+- Replaced equal-weight as the live Shiny allocation path with
+  `ForecastRankedStrategy(top_k=3, minimum_predicted_return=0.0)` driven by a
+  20-period moving-average return forecast.
+- The current risk profile adds its cash floor after ranking. On the tracked
+  five-stock data this produces a concentrated, forecast-responsive allocation
+  rather than five identical weights.
+- Equal-weight remains in the Evaluation tab as the transparent historical
+  benchmark; the service now reports both benchmark and forecast-ranked
+  backtest metrics.
+- Added the active allocation strategy to Summary disclosures. The approved
+  FinRL A2C artifact remains a later selectable strategy because the app needs
+  an explicit inference universe/date-coverage check first.
+
 ### Section 4.2 Financial Advisor Bot requirements audit (2026-09-28)
 
 Status: core requirements satisfied; delivery/UI gaps remain

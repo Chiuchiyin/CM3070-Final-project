@@ -8,7 +8,7 @@ Last updated: 2026-09-28 (requirements and delivery backlog reconciled)
 
 ## Sidebar advisor chatbot (2026-09-28)
 
-- [x] Add an Ask advisor control to the Shiny sidebar that uses the current
+- [x] Add an Ask advisor control to the Shiny interface that uses the current
   analysis result rather than a separate data path.
 - [x] Answer common questions about allocations, forecast estimates,
   historical backtest performance, risk, and data date from service-owned facts.
@@ -17,8 +17,29 @@ Last updated: 2026-09-28 (requirements and delivery backlog reconciled)
 - [x] Keep the chatbot educational and explicit about historical versus
   estimated outcomes; show the answer source in the sidebar.
 - [x] Add chatbot behavior tests; 53 advisor tests pass in `CM3070-FP`.
+- [x] Move the chatbot from the input sidebar to a dedicated right-hand card;
+  collapse it below the main content on narrow screens.
+- [x] Give the chatbot its own model selector, defaulting to Qwen + Smolagents;
+  keep the instant grounded responder as an explicit fallback option.
 - [ ] Add a visible loading indicator and multi-turn conversation history if
   user testing shows a need for them.
+- [x] Reconcile the production chatbot with the rough `LLM_demo.ipynb` design:
+  retain Qwen, Smolagents, stock-data questions, and conversational prose while
+  keeping the production tool restricted to validated advisor facts.
+- [x] Prevent JSON/tool payloads from being displayed as chatbot prose; use the
+  grounded fallback when Qwen returns structured output.
+
+## Production allocation strategy (2026-09-28)
+
+- [x] Replace equal-weight as the live Shiny allocation strategy with the
+  forecast-ranked strategy using a 20-period moving-average return forecast.
+- [x] Apply the selected risk profile's cash floor after forecast ranking and
+  preserve long-only weights that sum to one.
+- [x] Keep equal-weight in the Evaluation view as a transparent benchmark so
+  the strategy change remains measurable.
+- [x] Show the active allocation strategy in Summary disclosures.
+- [ ] Expose FinRL A2C as an optional selectable strategy after its inference
+  path is validated against the current app data universe and date coverage.
 
 ## Assessment brief audit (2026-09-28)
 

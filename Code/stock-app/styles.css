@@ -52,10 +52,29 @@
   align-items: start;
 }
 
+.app-content-grid {
+  align-items: start;
+}
+
+.chat-panel {
+  position: sticky;
+  top: 1rem;
+  min-width: 0;
+}
+
+.chat-panel .shiny-text-output {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 900px) {
   .summary-grid,
-  .evaluation-grid {
+  .evaluation-grid,
+  .app-content-grid {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .chat-panel {
+    position: static;
   }
 }
 

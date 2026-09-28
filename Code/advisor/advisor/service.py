@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from .explanation import template_explanation
-from .forecasting import LastCloseForecaster
+from .forecasting import LastCloseForecaster, MovingAverageForecaster
 from .strategy import EqualWeightStrategy
-from .backtesting import BacktestConfig, EqualWeightPolicy, run_backtest
+from .strategy import ForecastRankedStrategy
+from .backtesting import CASH, BacktestConfig, EqualWeightPolicy, ForecastRankedPolicy, run_backtest
 
 
 @dataclass
@@ -56,14 +57,21 @@ class AdvisorService:
             if market_data.empty:
                 raise ValueError("No observations exist on or before as_of_date")
         forecasts = self.forecaster.predict(market_data)
-        allocations = self.strategy.allocate(forecasts)
-        # Preserve the original dependency-light API when no profile was
-        # supplied: callers received a fully invested equal-weight basket.
+        allocations = self._allocate(market_data, forecasts)
+        # Preserve any cash selected by the strategy while enforcing the
+        # selected profile's minimum cash floor.
+        strategy_cash = float(allocations["cash_weight"].iloc[0]) if "cash_weight" in allocations else 0.0
         cash_minimum = self.RISK_PROFILES[risk_profile]["cash_minimum"] if requested_profile else 0.0
-        asset_scale = 1.0 - cash_minimum
+        cash_weight = max(strategy_cash, cash_minimum)
         allocations = allocations.copy()
-        allocations["weight"] = allocations["weight"].astype(float) * asset_scale
-        allocations["cash_weight"] = cash_minimum
+        asset_weights = allocations["weight"].astype(float)
+        asset_sum = float(asset_weights.sum())
+        if asset_sum > 0:
+            allocations["weight"] = asset_weights * ((1.0 - cash_weight) / asset_sum)
+        else:
+            allocations["weight"] = 0.0
+            cash_weight = 1.0
+        allocations["cash_weight"] = cash_weight
         allocations["as_of_date"] = pd.Timestamp(forecasts["as_of_date"].max())
         if abs(float(allocations["weight"].sum() + allocations["cash_weight"].iloc[0]) - 1.0) > 1e-9:
             raise ValueError("Allocation weights must sum to one")
@@ -81,6 +89,20 @@ class AdvisorService:
                 backtest_metrics["equal_weight"] = run_backtest(
                     market_data, EqualWeightPolicy(), self.backtest_config
                 ).metrics
+                # Keep the equal-weight result as a benchmark while exposing
+                # the forecast-ranked production strategy's historical result.
+                ranked_policy = ForecastRankedPolicy(
+                    MovingAverageForecaster(window=20),
+                    top_k=3,
+                    minimum_predicted_return=0.0,
+                )
+                backtest_metrics[ranked_policy.name] = run_backtest(
+                    market_data, ranked_policy, self.backtest_config
+                ).metrics
+                if hasattr(self.strategy, "target_weights"):
+                    backtest_metrics[getattr(self.strategy, "name", "production_policy")] = run_backtest(
+                        market_data, self.strategy, self.backtest_config
+                    ).metrics
             except ValueError as exc:
                 warnings.append(f"Backtest unavailable: {exc}")
         explanation_source = "template"
@@ -109,3 +131,23 @@ class AdvisorService:
             dataset_version=self.dataset_version, allocation_changes=changes,
             backtest_metrics=backtest_metrics,
         )
+
+    def _allocate(self, market_data: pd.DataFrame, forecasts: pd.DataFrame) -> pd.DataFrame:
+        """Support both forecast allocators and saved-policy adapters."""
+        if hasattr(self.strategy, "allocate"):
+            return self.strategy.allocate(forecasts)
+
+        if not hasattr(self.strategy, "target_weights"):
+            raise TypeError("Strategy must provide allocate() or target_weights()")
+
+        tickers = sorted(market_data["ticker"].astype(str).str.upper().unique())
+        current_weights = pd.Series(0.0, index=tickers + [CASH], dtype=float)
+        current_weights[CASH] = 1.0
+        target = self.strategy.target_weights(market_data.copy(), current_weights)
+        if target is None:
+            target = pd.Series({CASH: 1.0}, dtype=float)
+        target = target.astype(float).reindex(tickers + [CASH], fill_value=0.0)
+        result = pd.DataFrame({"ticker": tickers, "weight": target.loc[tickers].to_numpy()})
+        result["strategy_name"] = getattr(self.strategy, "name", "saved_policy")
+        result["cash_weight"] = float(target.get(CASH, 0.0))
+        return result

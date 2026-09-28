@@ -4,6 +4,12 @@
 Shiny application. It uses `AdvisorService` from `Code/advisor/` and exposes
 the Summary, Portfolio, Forecast, and Evaluation views.
 
+The live allocation uses the forecast-ranked strategy: a 20-period moving
+average return forecast ranks the selected stocks, holds the top three when
+their estimated return is non-negative, and applies the selected risk
+profile's cash floor. Equal-weight remains visible as a historical benchmark
+in Evaluation.
+
 The sidebar also includes an advisor chatbot. Run an analysis, enter a question
 about allocations, forecasts, historical performance, risk, or the data date,
 then click **Ask advisor**. The response uses the current analysis facts.
